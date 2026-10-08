@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="pageTitle">Home \ User</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080808; --surf: #1e1f20; --txt: #e3e3e3; --sec: #9aa0a6;
+            --blue: #a8c7fa; --blue-sol: #4285f4; --fnt: 'Google Sans', sans-serif;
+            --icon-fnt: 'Material Symbols Outlined', sans-serif;
+        }
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg); color: var(--txt); font-family: var(--fnt);
+            overflow: hidden; -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.3s ease;
+            opacity: 1;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 2.5px solid rgba(255,255,255,0.08);
+            border-top-color: var(--blue-sol);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        #content {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #content.show {
+            opacity: 1;
+        }
+        
+        .main-view {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; width: 90%; z-index: 5;
+        }
+        .title {
+            font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 400; letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #fff 0%, #c4c7c5 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;
+        }
+        
+        /* Top-right controls */
+        .top-controls {
+            position: absolute; top: 24px; right: 24px;
+            display: flex; align-items: center; gap: 12px;
+            z-index: 60;
+        }
+        .app-launcher-btn {
+            width: 44px; height: 44px;
+            border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: var(--surf);
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            padding: 0;
+            color: var(--txt);
+        }
+        .app-launcher-btn:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); }
+        .app-launcher-btn .material-symbols-outlined { font-size: 24px; }
+        
+        .profile-btn {
+            width: 44px; height: 44px;
+            border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.1);
+            overflow: hidden; background: var(--surf);
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.2s ease;
+            padding: 0;
+            position: relative;
+        }
+        .profile-btn:hover { border-color: rgba(255,255,255,0.25); }
+        .profile-btn img {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+        }
+        .profile-btn .initials {
+            font-size: 1.2rem; font-weight: 500; color: var(--sec);
+            font-family: var(--fnt); user-select: none;
+        }
+        
+        /* App grid popup */
+        .app-grid-popup {
+            position: absolute; top: 80px; right: 24px;
+            width: 320px; background: var(--surf);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            z-index: 70;
+            display: none;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.97);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .app-grid-popup.open {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .app-grid-popup::-webkit-scrollbar { width: 4px; }
+        .app-grid-popup::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .app-grid-title {
+            font-size: 0.8rem; color: var(--sec); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 12px; padding-left: 4px;
+        }
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .app-grid-item {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 6px; padding: 12px 4px;
+            border-radius: 14px; cursor: pointer;
+            background: transparent;
+            border: 1px solid transparent;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: var(--txt);
+        }
+        .app-grid-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.08);
+        }
+        .app-grid-item .material-symbols-outlined {
+            font-size: 26px; color: var(--blue);
+        }
+        .app-grid-item .app-name {
+            font-size: 0.75rem; color: var(--sec);
+            text-align: center; line-height: 1.2;
+        }
+        
+        .prompt-container {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 680px; z-index: 5;
+        }
+        .prompt-box {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--surf); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 28px; padding: 6px 6px 6px 24px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            min-height: 64px;
+        }
+        .prompt-box:focus-within {
+            border-color: var(--blue-sol);
+            box-shadow: 0 8px 40px rgba(66, 133, 244, 0.15);
+        }
+        .prompt-box input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--txt); font-family: var(--fnt); font-size: 1.05rem;
+            padding: 18px 0; min-width: 0; line-height: 1.5;
+        }
+        .prompt-box input::placeholder { color: var(--sec); font-size: 1rem; }
+        .prompt-btn {
+            background: var(--blue); border: none; border-radius: 50%;
+            width: 52px; height: 52px; min-width: 52px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s ease, transform 0.15s ease;
+            color: #042f66;
+        }
+        .prompt-btn:hover { background: #c2dbff; }
+        .prompt-btn:active { transform: scale(0.94); }
+        .prompt-btn .material-symbols-outlined {
+            font-size: 28px;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            transition: transform 0.2s ease;
+        }
+        .prompt-btn.ai-mode .material-symbols-outlined {
+            transform: rotate(45deg);
+        }
+        .prompt-btn.ai-mode {
+            background: #a142f4;
+        }
+        .prompt-btn.ai-mode:hover {
+            background: #b85cf9;
+        }
+        
+        .mask {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 80; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .mask.active { opacity: 1; pointer-events: auto; }
+        
+        .dialog {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 85%; max-width: 360px; background: var(--surf); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; z-index: 100; padding: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; opacity: 0; pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box;
+            max-height: 80vh; overflow-y: auto;
+        }
+        .dialog.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+        .d-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .d-title { font-size: 1.3rem; font-weight: 400; color: #fff; font-family: var(--fnt); }
+        .d-close {
+            background: transparent; border: none; cursor: pointer; width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--sec);
+        }
+        .d-close:hover { background: rgba(255, 255, 255, 0.08); }
+        .d-close .material-symbols-outlined { font-size: 24px; }
+        .f-group { margin-bottom: 20px; display: flex; flex-direction: column; width: 100%; }
+        .f-lbl { margin-bottom: 8px; font-size: 0.85rem; color: var(--blue); font-weight: 500; font-family: var(--fnt); }
+        .f-in {
+            width: 100%; padding: 12px 14px; background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; color: var(--txt); font-family: var(--fnt); font-size: 1rem; outline: none; box-sizing: border-box;
+        }
+        .f-in:focus { border-color: var(--blue-sol); background: #131415; }
+        .f-in.api-key {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .f-btn {
+            background: var(--blue); color: #042f66; border: none; padding: 12px 24px;
+            border-radius: 100px; font-family: var(--fnt); font-weight: 500; font-size: 0.95rem;
+            cursor: pointer; width: 100%; text-align: center; box-sizing: border-box;
+        }
+        .f-btn:hover { background: #c2dbff; }
+        
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 20px; text-align: center;
+            cursor: pointer; transition: all 0.2s ease;
+            background: rgba(255,255,255,0.02);
+        }
+        .upload-area:hover { border-color: var(--blue-sol); background: rgba(255,255,255,0.05); }
+        .upload-area.dragover { border-color: var(--blue-sol); background: rgba(66,133,244,0.1); }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area .upload-text { color: var(--sec); font-size: 0.9rem; }
+        .upload-area .upload-text strong { color: var(--txt); }
+        .upload-preview {
+            width: 80px; height: 80px; border-radius: 50%;
+            object-fit: cover; margin: 10px auto; display: none;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .upload-preview.show { display: block; }
+        .upload-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: center; }
+        .upload-actions button {
+            padding: 6px 16px; border-radius: 100px; border: none;
+            cursor: pointer; font-family: var(--fnt); font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .upload-actions .btn-upload { background: var(--blue); color: #042f66; }
+        .upload-actions .btn-upload:hover { background: #c2dbff; }
+        .upload-actions .btn-remove { background: rgba(255,255,255,0.08); color: var(--sec); }
+        .upload-actions .btn-remove:hover { background: rgba(255,255,255,0.15); }
+        .upload-actions .material-symbols-outlined { font-size: 18px; }
+        
+        .link-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; background: rgba(255,255,255,0.03);
+            border-radius: 12px; margin-bottom: 8px; gap: 8px;
+        }
+        .link-item .link-info {
+            display: flex; flex-direction: column; align-items: flex-start;
+            flex: 1; min-width: 0;
+        }
+        .link-item .link-key { font-weight: 500; font-size: 0.95rem; color: var(--txt); }
+        .link-item .link-url {
+            font-size: 0.75rem; color: var(--sec);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            max-width: 160px;
+        }
+        .link-item .link-actions { display: flex; gap: 6px; }
+        .link-item .link-actions button {
+            background: transparent; border: none; cursor: pointer;
+            padding: 4px 8px; border-radius: 6px; color: var(--sec);
+            font-size: 0.85rem; transition: all 0.2s ease;
+            display: flex; align-items: center;
+        }
+        .link-item .link-actions button:hover { background: rgba(255,255,255,0.08); color: var(--txt); }
+        .link-item .link-actions .del:hover { color: #ff6b6b; }
+        .link-item .link-actions .material-symbols-outlined { font-size: 20px; }
+        
+        .notifier {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: var(--surf); color: var(--txt); padding: 12px 24px;
+            border-radius: 100px; border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200;
+            opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.95rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .notifier.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .notifier.success { border-color: #34a853; }
+        .notifier.error { border-color: #ea4335; }
+        .notifier .material-symbols-outlined { font-size: 20px; }
+        
+        .quicklink-redirect { display: inline-block; position: relative; }
+        .quicklink-redirect::after {
+            content: ''; position: absolute; left: 0; bottom: -2px;
+            width: 0; height: 2px; background: var(--blue);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quicklink-redirect.active::after { width: 100%; }
+        
+        .feature-panel {
+            position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%) translateY(20px);
+            width: 90%; max-width: 680px; max-height: 55vh;
+            background: var(--surf); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; padding: 20px; z-index: 10;
+            box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            display: flex; flex-direction: column;
+            scroll-behavior: smooth;
+        }
+        .feature-panel.open {
+            opacity: 1; pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .feature-panel::-webkit-scrollbar { width: 4px; }
+        .feature-panel::-webkit-scrollbar-track { background: transparent; }
+        .feature-panel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15); border-radius: 4px;
+        }
+        
+        .feature-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px;
+            padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            flex-shrink: 0;
+        }
+        .feature-header .title {
+            font-weight: 500; color: var(--sec); font-size: 0.9rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .feature-header .title .material-symbols-outlined {
+            font-size: 20px; color: var(--blue);
+        }
+        .feature-header .close-panel {
+            background: transparent; border: none; color: var(--sec);
+            cursor: pointer; padding: 4px;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; transition: background 0.2s ease;
+        }
+        .feature-header .close-panel:hover { background: rgba(255,255,255,0.08); }
+        
+        .feature-content {
+            flex: 1; display: flex; flex-direction: column;
+            min-height: 100px; max-height: 40vh;
+            overflow-y: auto; padding-right: 4px;
+        }
+        .feature-content::-webkit-scrollbar { width: 3px; }
+        .feature-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1); border-radius: 4px;
+        }
+        
+        /* AI Chat specific */
+        .ai-chat .message {
+            margin-bottom: 12px; padding: 12px 16px;
+            border-radius: 16px; max-width: 85%;
+            animation: messageIn 0.3s ease;
+            line-height: 1.6; font-size: 0.95rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            flex-shrink: 0;
+        }
+        .ai-chat .message.user {
+            background: var(--blue); color: #042f66;
+            align-self: flex-end; border-bottom-right-radius: 4px;
+        }
+        .ai-chat .message.ai {
+            background: rgba(255,255,255,0.06); color: var(--txt);
+            align-self: flex-start; border-bottom-left-radius: 4px;
+        }
+        .ai-chat .message.ai *:last-child { margin-bottom: 0; }
+        .ai-chat .message.ai h1,
+        .ai-chat .message.ai h2,
+        .ai-chat .message.ai h3,
+        .ai-chat .message.ai h4 { margin: 8px 0 6px 0; font-weight: 500; }
+        .ai-chat .message.ai h1 { font-size: 1.4rem; }
+        .ai-chat .message.ai h2 { font-size: 1.2rem; }
+        .ai-chat .message.ai h3 { font-size: 1.05rem; }
+        .ai-chat .message.ai p { margin: 6px 0; }
+        .ai-chat .message.ai ul,
+        .ai-chat .message.ai ol { margin: 6px 0; padding-left: 20px; }
+        .ai-chat .message.ai li { margin: 3px 0; }
+        .ai-chat .message.ai code {
+            background: rgba(255,255,255,0.08); padding: 2px 6px;
+            border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.9em;
+            word-break: break-word;
+        }
+        .ai-chat .message.ai pre {
+            background: rgba(0,0,0,0.3); padding: 12px;
+            border-radius: 8px; overflow-x: auto; margin: 8px 0;
+            max-width: 100%;
+        }
+        .ai-chat .message.ai pre code { background: transparent; padding: 0; font-size: 0.9em; }
+        .ai-chat .message.ai blockquote {
+            border-left: 3px solid var(--blue-sol); padding-left: 12px;
+            margin: 8px 0; color: var(--sec);
+        }
+        .ai-chat .message.ai a { color: var(--blue); text-decoration: none; }
+        .ai-chat .message.ai a:hover { text-decoration: underline; }
+        .ai-chat .message.ai table {
+            border-collapse: collapse; margin: 8px 0; width: 100%;
+            display: block; overflow-x: auto;
+        }
+        .ai-chat .message.ai th,
+        .ai-chat .message.ai td {
+            border: 1px solid rgba(255,255,255,0.1); padding: 6px 10px; text-align: left;
+        }
+        .ai-chat .message.ai th { background: rgba(255,255,255,0.05); }
+        .ai-chat .message.ai hr {
+            border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 12px 0;
+        }
+        .ai-chat .message.ai img { max-width: 100%; border-radius: 8px; }
+        .ai-chat .message.ai .typing {
+            display: inline-block; width: 4px; height: 16px;
+            background: var(--sec); animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-chat .message .material-symbols-outlined {
+            font-size: 16px; vertical-align: middle; margin-right: 4px;
+        }
+        .ai-chat .empty-state {
+            color: var(--sec); text-align: center;
+            padding: 30px 0; font-size: 0.95rem;
+        }
+        .ai-chat .empty-state .material-symbols-outlined {
+            font-size: 48px; display: block;
+            margin-bottom: 12px; color: rgba(255,255,255,0.05);
+        }
+        
+        /* Make the AI chat panel content scroll as one unit */
+        .ai-chat .feature-content {
+            max-height: 45vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            padding-right: 6px;
+        }
+        
+        /* Clock */
+        .clock-display {
+            font-size: 4rem; font-weight: 300;
+            text-align: center; padding: 20px 0;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px; color: #fff;
+        }
+        .clock-date {
+            font-size: 1.1rem; color: var(--sec);
+            text-align: center; margin-top: 8px;
+        }
+        
+        /* Todo */
+        .todo-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .todo-input-row input {
+            flex: 1; padding: 10px 14px;
+            background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; color: var(--txt);
+            font-family: var(--fnt); font-size: 0.95rem; outline: none;
+        }
+        .todo-input-row input:focus { border-color: var(--blue-sol); }
+        .todo-input-row button {
+            background: var(--blue); color: #042f66;
+            border: none; padding: 10px 18px;
+            border-radius: 12px; font-family: var(--fnt);
+            font-weight: 500; font-size: 0.9rem; cursor: pointer;
+        }
+        .todo-input-row button:hover { background: #c2dbff; }
+        .todo-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; background: rgba(255,255,255,0.03);
+            border-radius: 10px; margin-bottom: 6px;
+        }
+        .todo-item input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--blue-sol);
+            cursor: pointer; flex-shrink: 0;
+        }
+        .todo-item .todo-text { flex: 1; font-size: 0.95rem; word-break: break-word; }
+        .todo-item .todo-text.done { text-decoration: line-through; color: var(--sec); }
+        .todo-item .todo-del {
+            background: transparent; border: none; color: var(--sec);
+            cursor: pointer; padding: 4px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .todo-item .todo-del:hover { color: #ff6b6b; background: rgba(255,0,0,0.1); }
+        .todo-item .todo-del .material-symbols-outlined { font-size: 18px; }
+        .todo-empty { color: var(--sec); text-align: center; padding: 30px 0; font-size: 0.95rem; }
+        
+        /* Timer */
+        .timer-display {
+            font-size: 3.5rem; font-weight: 300;
+            text-align: center; padding: 10px 0;
+            font-variant-numeric: tabular-nums; letter-spacing: 2px;
+        }
+        .timer-controls {
+            display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;
+        }
+        .timer-controls button {
+            background: rgba(255,255,255,0.08); color: var(--txt);
+            border: none; padding: 10px 20px; border-radius: 100px;
+            font-family: var(--fnt); font-size: 0.9rem; cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .timer-controls button:hover { background: rgba(255,255,255,0.15); }
+        .timer-controls button.primary { background: var(--blue); color: #042f66; }
+        .timer-controls button.primary:hover { background: #c2dbff; }
+        .timer-presets {
+            display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap;
+        }
+        .timer-presets button {
+            background: rgba(255,255,255,0.05); color: var(--sec);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 6px 14px; border-radius: 100px;
+            font-family: var(--fnt); font-size: 0.85rem; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .timer-presets button:hover { background: rgba(255,255,255,0.1); color: var(--txt); }
+        
+        /* Stopwatch */
+        .stopwatch-laps { margin-top: 12px; max-height: 150px; overflow-y: auto; }
+        .stopwatch-lap {
+            display: flex; justify-content: space-between;
+            padding: 6px 12px; font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stopwatch-lap:last-child { border-bottom: none; }
+        .stopwatch-lap .lap-num { color: var(--sec); }
+        .stopwatch-lap .lap-time { font-variant-numeric: tabular-nums; }
+        
+        /* Notes */
+        .notes-textarea {
+            width: 100%; min-height: 200px;
+            background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; color: var(--txt);
+            font-family: var(--fnt); font-size: 0.95rem;
+            padding: 14px; outline: none; resize: vertical;
+            box-sizing: border-box; line-height: 1.6;
+        }
+        .notes-textarea:focus { border-color: var(--blue-sol); }
+        .notes-status { font-size: 0.8rem; color: var(--sec); text-align: right; margin-top: 6px; }
+        
+        /* Terminal */
+        .terminal-output {
+            flex: 1; min-height: 200px; max-height: 35vh;
+            overflow-y: auto; font-family: 'Courier New', monospace;
+            font-size: 0.9rem; padding: 12px;
+            background: rgba(0,0,0,0.3); border-radius: 12px;
+            margin-bottom: 10px; line-height: 1.5;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .terminal-output::-webkit-scrollbar { width: 3px; }
+        .terminal-output::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .terminal-line { margin-bottom: 2px; }
+        .terminal-line.cmd { color: var(--blue); }
+        .terminal-line.err { color: #ff6b6b; }
+        .terminal-line.out { color: var(--txt); }
+        .terminal-line.info { color: var(--sec); }
+        .terminal-input-row {
+            display: flex; align-items: center; gap: 8px;
+            background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 0 14px;
+        }
+        .terminal-input-row:focus-within { border-color: var(--blue-sol); }
+        .terminal-prompt {
+            color: var(--blue); font-family: 'Courier New', monospace;
+            font-size: 0.9rem; font-weight: bold; white-space: nowrap;
+        }
+        .terminal-input-row input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--txt); font-family: 'Courier New', monospace;
+            font-size: 0.9rem; padding: 12px 0;
+        }
+        
+        /* GitHub Panel */
+        .github-loading {
+            color: var(--sec); text-align: center; padding: 40px 0;
+            font-size: 0.95rem;
+        }
+        .github-loading .spinner {
+            margin: 0 auto 12px auto;
+        }
+        .github-error {
+            color: #ff6b6b; text-align: center; padding: 30px 0; font-size: 0.95rem;
+        }
+        .gh-profile {
+            display: flex; align-items: center; gap: 16px;
+            padding: 16px; background: rgba(255,255,255,0.03);
+            border-radius: 16px; margin-bottom: 16px;
+        }
+        .gh-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .gh-profile-info { flex: 1; min-width: 0; }
+        .gh-name {
+            font-size: 1.2rem; font-weight: 500; color: #fff;
+            margin-bottom: 2px;
+        }
+        .gh-login {
+            font-size: 0.85rem; color: var(--blue);
+            text-decoration: none;
+        }
+        .gh-login:hover { text-decoration: underline; }
+        .gh-bio {
+            font-size: 0.85rem; color: var(--sec);
+            margin-top: 6px; line-height: 1.4;
+        }
+        .gh-meta {
+            display: flex; gap: 14px; margin-top: 6px;
+            font-size: 0.8rem; color: var(--sec);
+            flex-wrap: wrap;
+        }
+        .gh-meta span {
+            display: flex; align-items: center; gap: 4px;
+        }
+        .gh-meta .material-symbols-outlined { font-size: 14px; }
+        
+        .gh-stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .gh-stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px; padding: 14px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .gh-stat-card:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }
+        .gh-stat-icon {
+            font-size: 22px; color: var(--blue);
+            margin-bottom: 4px;
+        }
+        .gh-stat-value {
+            font-size: 1.5rem; font-weight: 500; color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .gh-stat-label {
+            font-size: 0.75rem; color: var(--sec);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+        
+        .gh-section-title {
+            font-size: 0.85rem; color: var(--blue);
+            font-weight: 500; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        /* Language bar */
+        .gh-lang-bar {
+            display: flex; height: 12px; border-radius: 6px;
+            overflow: hidden; margin-bottom: 12px;
+            background: rgba(255,255,255,0.05);
+        }
+        .gh-lang-segment {
+            height: 100%; transition: opacity 0.2s ease;
+        }
+        .gh-lang-segment:hover { opacity: 0.8; }
+        .gh-lang-legend {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            margin-bottom: 16px;
+        }
+        .gh-lang-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; color: var(--sec);
+        }
+        .gh-lang-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .gh-lang-name { color: var(--txt); }
+        .gh-lang-pct { color: var(--sec); font-size: 0.75rem; }
+        
+        /* Repos list */
+        .gh-repo-list { display: flex; flex-direction: column; gap: 8px; }
+        .gh-repo {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; background: rgba(255,255,255,0.03);
+            border-radius: 10px; gap: 10px;
+            transition: background 0.2s ease;
+        }
+        .gh-repo:hover { background: rgba(255,255,255,0.06); }
+        .gh-repo-info { flex: 1; min-width: 0; }
+        .gh-repo-name {
+            font-size: 0.95rem; font-weight: 500; color: var(--blue);
+            text-decoration: none; display: block;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .gh-repo-name:hover { text-decoration: underline; }
+        .gh-repo-desc {
+            font-size: 0.8rem; color: var(--sec);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            margin-top: 2px;
+        }
+        .gh-repo-stats {
+            display: flex; gap: 10px; font-size: 0.8rem;
+            color: var(--sec); flex-shrink: 0;
+        }
+        .gh-repo-stats span {
+            display: flex; align-items: center; gap: 3px;
+        }
+        .gh-repo-stats .material-symbols-outlined { font-size: 14px; }
+        
+        /* Activity graph (contribution-style bar chart) */
+        .gh-activity-chart {
+            display: flex; align-items: flex-end; gap: 3px;
+            height: 80px; padding: 8px 0; margin-bottom: 6px;
+        }
+        .gh-activity-bar {
+            flex: 1; border-radius: 3px 3px 0 0;
+            background: linear-gradient(180deg, var(--blue-sol), #1a73e8);
+            min-height: 2px; position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .gh-activity-bar:hover {
+            filter: brightness(1.3);
+        }
+        .gh-activity-bar::after {
+            content: attr(data-count);
+            position: absolute; top: -22px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--surf); color: var(--txt);
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 0.7rem; white-space: nowrap;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .gh-activity-bar:hover::after { opacity: 1; }
+        .gh-activity-labels {
+            display: flex; justify-content: space-between;
+            font-size: 0.7rem; color: var(--sec);
+            margin-bottom: 16px;
+        }
+        
+        .gh-empty {
+            color: var(--sec); text-align: center;
+            padding: 20px; font-size: 0.9rem;
+        }
+        
+        .aurora-view {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 350px;
+            pointer-events: none; overflow: visible; z-index: 1;
+        }
+        .aurora-field {
+            position: absolute; bottom: -120px; left: -20%; width: 140%; height: 450px;
+            filter: blur(80px); opacity: 0.85; display: flex; align-items: flex-end;
+            overflow: visible;
+        }
+        .wave { position: absolute; bottom: 0; height: 100%; mix-blend-mode: screen; transform-origin: bottom center; }
+        .w-b { left: -10%; width: 75%; background: radial-gradient(ellipse at bottom, #1a73e8 0%, transparent 75%); animation: drift1 10s infinite ease-in-out alternate; }
+        .w-p { left: 10%; width: 70%; background: radial-gradient(ellipse at bottom, #a142f4 0%, transparent 75%); animation: drift2 8s infinite ease-in-out alternate-reverse; }
+        .w-k { right: 10%; width: 65%; background: radial-gradient(ellipse at bottom, #ff63b4 0%, transparent 75%); animation: drift3 9s infinite ease-in-out alternate; }
+        .w-a { right: -10%; width: 55%; background: radial-gradient(ellipse at bottom, #fbbc04 0%, transparent 75%); animation: drift4 7s infinite ease-in-out alternate-reverse; }
+        
+        @keyframes drift1 {
+            0% { transform: scaleY(0.7) scaleX(0.9) translateX(-2%) rotate(-1deg); opacity: 0.6; }
+            50% { transform: scaleY(1.1) scaleX(1.05) translateX(2%) rotate(1deg); opacity: 0.9; }
+            100% { transform: scaleY(0.8) scaleX(0.95) translateX(-1%) rotate(0deg); opacity: 0.7; }
+        }
+        @keyframes drift2 {
+            0% { transform: scaleY(1.0) scaleX(1.0) translateX(2%) rotate(1deg); opacity: 0.85; }
+            50% { transform: scaleY(0.65) scaleX(0.85) translateX(-3%) rotate(-1deg); opacity: 0.6; }
+            100% { transform: scaleY(1.1) scaleX(0.95) translateX(1%) rotate(0deg); opacity: 0.85; }
+        }
+        @keyframes drift3 {
+            0% { transform: scaleY(0.75) scaleX(0.85) translateX(-1%) rotate(0deg); opacity: 0.65; }
+            50% { transform: scaleY(1.0) scaleX(1.1) translateX(3%) rotate(2deg); opacity: 0.9; }
+            100% { transform: scaleY(0.7) scaleX(0.9) translateX(-1%) rotate(-1deg); opacity: 0.65; }
+        }
+        @keyframes drift4 {
+            0% { transform: scaleY(1.05) scaleX(1.05) translateX(1%) rotate(1deg); opacity: 0.8; }
+            50% { transform: scaleY(0.7) scaleX(0.85) translateX(-2%) rotate(-1deg); opacity: 0.55; }
+            100% { transform: scaleY(0.95) scaleX(1.0) translateX(2%) rotate(1deg); opacity: 0.8; }
+        }
+        
+        .line {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, #1a73e8, #a142f4, #ff63b4, #fbbc04, #1a73e8);
+            opacity: 0.3; filter: blur(1px); z-index: 2;
+        }
+        
+        /* Day iframe panel */
+        .day-iframe-container {
+            width: 100%; height: 300px;
+            border: none; border-radius: 12px;
+            background: #fff;
+            margin-top: 6px;
+        }
+        .day-iframe-container iframe {
+            width: 100%; height: 100%;
+            border: none; border-radius: 12px;
+        }
+        
+        /* Calculator */
+        .calc-display {
+            width: 100%; padding: 16px;
+            background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; color: var(--txt);
+            font-family: var(--fnt); font-size: 1.8rem;
+            text-align: right; box-sizing: border-box;
+            margin-bottom: 12px; outline: none;
+            font-variant-numeric: tabular-nums;
+        }
+        .calc-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .calc-btn {
+            padding: 16px; border-radius: 12px;
+            border: none; cursor: pointer;
+            font-family: var(--fnt); font-size: 1.1rem;
+            background: rgba(255,255,255,0.06);
+            color: var(--txt);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .calc-btn:hover { background: rgba(255,255,255,0.12); }
+        .calc-btn:active { transform: scale(0.96); }
+        .calc-btn.op { background: rgba(168,199,250,0.15); color: var(--blue); }
+        .calc-btn.eq { background: var(--blue); color: #042f66; }
+        .calc-btn.eq:hover { background: #c2dbff; }
+        .calc-btn.clear { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+        
+        /* Color picker */
+        .color-preview {
+            width: 100%; height: 100px;
+            border-radius: 12px; margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .color-info {
+            display: flex; justify-content: space-between;
+            font-size: 0.9rem; color: var(--sec);
+            margin-bottom: 8px;
+        }
+        .color-info span { color: var(--txt); font-family: monospace; }
+        
+        /* Weather (simple, no API) */
+        .weather-display {
+            text-align: center; padding: 20px 0;
+        }
+        .weather-icon {
+            font-size: 64px; color: var(--blue);
+            margin-bottom: 8px;
+        }
+        .weather-temp {
+            font-size: 3rem; font-weight: 300; color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .weather-desc {
+            font-size: 1rem; color: var(--sec);
+            margin-top: 4px;
+        }
+        .weather-note {
+            font-size: 0.8rem; color: var(--sec);
+            margin-top: 16px; font-style: italic;
+        }
+        
+        /* Whiteboard */
+        .whiteboard-panel {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #ffffff; z-index: 90;
+            display: none; flex-direction: column;
+            transition: background 0.2s ease;
+        }
+        .whiteboard-panel.open { display: flex; }
+        .whiteboard-panel.dark { background: #1a1a1a; }
+        
+        .wb-toolbar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.9);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            flex-wrap: wrap;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+        }
+        .whiteboard-panel.dark .wb-toolbar {
+            background: rgba(30,31,32,0.9);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .wb-toolbar button, .wb-toolbar .wb-tool {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 8px 14px;
+            border-radius: 10px; border: 1px solid rgba(0,0,0,0.08);
+            background: #f5f5f5; color: #333;
+            font-family: var(--fnt); font-size: 0.85rem;
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        .whiteboard-panel.dark .wb-toolbar button,
+        .whiteboard-panel.dark .wb-toolbar .wb-tool {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.1);
+            color: #e3e3e3;
+        }
+        .wb-toolbar button:hover, .wb-toolbar .wb-tool:hover {
+            background: #e8e8e8;
+        }
+        .whiteboard-panel.dark .wb-toolbar button:hover,
+        .whiteboard-panel.dark .wb-toolbar .wb-tool:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .wb-toolbar button.active, .wb-toolbar .wb-tool.active {
+            background: var(--blue-sol); color: #fff;
+            border-color: var(--blue-sol);
+        }
+        .wb-toolbar .wb-tool .material-symbols-outlined { font-size: 20px; }
+        .wb-spacer { flex: 1; }
+        .wb-color-input {
+            width: 36px; height: 36px; padding: 0; border: none;
+            border-radius: 50%; cursor: pointer; background: transparent;
+        }
+        .wb-size-slider {
+            width: 80px; accent-color: var(--blue-sol);
+        }
+        .wb-zoom-display {
+            font-size: 0.8rem; color: inherit; font-variant-numeric: tabular-nums;
+            min-width: 48px; text-align: center;
+        }
+        .wb-canvas-wrapper {
+            flex: 1; position: relative; overflow: hidden;
+            background: #fff;
+        }
+        .whiteboard-panel.dark .wb-canvas-wrapper {
+            background: #1a1a1a;
+        }
+        .wb-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .wb-text-input {
+            position: absolute;
+            background: transparent;
+            border: 1px dashed var(--blue-sol);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-family: var(--fnt);
+            outline: none;
+            min-width: 60px;
+            display: none;
+            z-index: 3;
+        }
+        .wb-text-input.active { display: block; }
+        
+        .wb-toggle-mode {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 0.85rem; color: inherit;
+        }
+        
+        /* Greeting editor */
+        .greeting-list {
+            display: flex; flex-direction: column; gap: 6px;
+            margin-bottom: 12px; max-height: 200px;
+            overflow-y: auto; padding-right: 4px;
+        }
+        .greeting-list::-webkit-scrollbar { width: 3px; }
+        .greeting-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .greeting-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+        }
+        .greeting-item input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--txt); font-family: var(--fnt); font-size: 0.9rem;
+            padding: 4px 6px; border-radius: 6px;
+            border: 1px solid transparent;
+            min-width: 0;
+        }
+        .greeting-item input:focus { border-color: var(--blue-sol); background: rgba(0,0,0,0.2); }
+        .greeting-item .greeting-del {
+            background: transparent; border: none; color: var(--sec);
+            cursor: pointer; padding: 4px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; flex-shrink: 0;
+        }
+        .greeting-item .greeting-del:hover { color: #ff6b6b; background: rgba(255,0,0,0.1); }
+        .greeting-item .greeting-del .material-symbols-outlined { font-size: 18px; }
+        .greeting-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .greeting-add-row input {
+            flex: 1; padding: 10px 14px;
+            background: #282a2c; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; color: var(--txt);
+            font-family: var(--fnt); font-size: 0.9rem; outline: none;
+        }
+        .greeting-add-row input:focus { border-color: var(--blue-sol); }
+        .greeting-add-row button {
+            background: var(--blue); color: #042f66;
+            border: none; padding: 10px 18px;
+            border-radius: 12px; font-family: var(--fnt);
+            font-weight: 500; font-size: 0.9rem; cursor: pointer;
+        }
+        .greeting-add-row button:hover { background: #c2dbff; }
+        .greeting-reset-btn {
+            background: rgba(255,255,255,0.08); color: var(--sec);
+            border: none; padding: 10px 18px;
+            border-radius: 100px; font-family: var(--fnt);
+            font-size: 0.85rem; cursor: pointer;
+            margin-top: 4px; width: 100%;
+        }
+        .greeting-reset-btn:hover { background: rgba(255,255,255,0.15); color: var(--txt); }
+        .settings-section-title {
+            font-size: 0.85rem; color: var(--blue); font-weight: 500;
+            margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="content">
+        <!-- Top-right controls: app launcher + profile -->
+        <div class="top-controls">
+            <button class="app-launcher-btn" id="appLauncherBtn" aria-label="Apps">
+                <span class="material-symbols-outlined">apps</span>
+            </button>
+            <button class="profile-btn" id="profileBtn" aria-label="Profile">
+                <span class="initials" id="profileInitials">J</span>
+                <img id="profileImg" style="display:none;" alt="Profile">
+            </button>
+        </div>
+
+        <!-- App grid popup -->
+        <div class="app-grid-popup" id="appGridPopup">
+            <div class="app-grid-title">Apps</div>
+            <div class="app-grid">
+                <a class="app-grid-item" data-panel="clockPanel" href="#">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span class="app-name">Clock</span>
+                </a>
+                <a class="app-grid-item" data-panel="todoPanel" href="#">
+                    <span class="material-symbols-outlined">checklist</span>
+                    <span class="app-name">Todo</span>
+                </a>
+                <a class="app-grid-item" data-panel="timerPanel" href="#">
+                    <span class="material-symbols-outlined">timer</span>
+                    <span class="app-name">Timer</span>
+                </a>
+                <a class="app-grid-item" data-panel="stopwatchPanel" href="#">
+                    <span class="material-symbols-outlined">av_timer</span>
+                    <span class="app-name">Stopwatch</span>
+                </a>
+                <a class="app-grid-item" data-panel="notesPanel" href="#">
+                    <span class="material-symbols-outlined">edit_note</span>
+                    <span class="app-name">Notes</span>
+                </a>
+                <a class="app-grid-item" data-panel="terminalPanel" href="#">
+                    <span class="material-symbols-outlined">terminal</span>
+                    <span class="app-name">Terminal</span>
+                </a>
+                <a class="app-grid-item" data-panel="githubPanel" href="#">
+                    <span class="material-symbols-outlined">code</span>
+                    <span class="app-name">GitHub</span>
+                </a>
+                <a class="app-grid-item" data-panel="dayPanel" href="#">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="app-name">Day</span>
+                </a>
+                <a class="app-grid-item" data-panel="aiChat" href="#">
+                    <span class="material-symbols-outlined">auto_awesome</span>
+                    <span class="app-name">AI Chat</span>
+                </a>
+                <a class="app-grid-item" data-panel="calcPanel" href="#">
+                    <span class="material-symbols-outlined">calculate</span>
+                    <span class="app-name">Calculator</span>
+                </a>
+                <a class="app-grid-item" data-panel="colorPanel" href="#">
+                    <span class="material-symbols-outlined">palette</span>
+                    <span class="app-name">Colors</span>
+                </a>
+                <a class="app-grid-item" data-panel="weatherPanel" href="#">
+                    <span class="material-symbols-outlined">cloud</span>
+                    <span class="app-name">Weather</span>
+                </a>
+                <a class="app-grid-item" data-panel="whiteboardPanel" href="#">
+                    <span class="material-symbols-outlined">draw</span>
+                    <span class="app-name">Whiteboard</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="mask" id="mask"></div>
+
+        <div class="dialog" id="box">
+            <div class="d-head">
+                <div class="d-title" id="dialogTitle">Settings</div>
+                <button class="d-close" id="close" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="dialogContent">
+                <!-- settings injected by JS -->
+            </div>
+        </div>
+
+        <div class="notifier" id="notifier"></div>
+
+        <div class="main-view">
+            <h1 class="title" id="out">Hello</h1>
+        </div>
+
+        <!-- AI Chat Panel -->
+        <div class="feature-panel ai-chat" id="aiChat">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">auto_awesome</span>
+                    AI Assistant
+                </div>
+                <button class="close-panel" data-panel="aiChat">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content" id="messagesContainer">
+                <div class="empty-state">
+                    <span class="material-symbols-outlined">chat</span>
+                    Ask me anything!
+                </div>
+            </div>
+        </div>
+
+        <!-- Clock Panel -->
+        <div class="feature-panel" id="clockPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">schedule</span>
+                    Clock
+                </div>
+                <button class="close-panel" data-panel="clockPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="clock-display" id="clockDisplay">00:00:00</div>
+                <div class="clock-date" id="clockDate"></div>
+            </div>
+        </div>
+
+        <!-- Todo Panel -->
+        <div class="feature-panel" id="todoPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">checklist</span>
+                    Todo
+                </div>
+                <button class="close-panel" data-panel="todoPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="todo-input-row">
+                    <input type="text" id="todoInput" placeholder="Add a task..." autocomplete="off">
+                    <button id="todoAddBtn">Add</button>
+                </div>
+                <div id="todoList"></div>
+            </div>
+        </div>
+
+        <!-- Timer Panel -->
+        <div class="feature-panel" id="timerPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">timer</span>
+                    Timer
+                </div>
+                <button class="close-panel" data-panel="timerPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="timer-display" id="timerDisplay">00:00</div>
+                <div class="timer-presets">
+                    <button data-seconds="60">1 min</button>
+                    <button data-seconds="300">5 min</button>
+                    <button data-seconds="600">10 min</button>
+                    <button data-seconds="1800">30 min</button>
+                </div>
+                <div class="timer-controls">
+                    <button class="primary" id="timerToggle">Start</button>
+                    <button id="timerReset">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stopwatch Panel -->
+        <div class="feature-panel" id="stopwatchPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">av_timer</span>
+                    Stopwatch
+                </div>
+                <button class="close-panel" data-panel="stopwatchPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="timer-display" id="stopwatchDisplay">00:00.00</div>
+                <div class="timer-controls">
+                    <button class="primary" id="stopwatchToggle">Start</button>
+                    <button id="stopwatchLap">Lap</button>
+                    <button id="stopwatchReset">Reset</button>
+                </div>
+                <div class="stopwatch-laps" id="stopwatchLaps"></div>
+            </div>
+        </div>
+
+        <!-- Notes Panel -->
+        <div class="feature-panel" id="notesPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">edit_note</span>
+                    Notes
+                </div>
+                <button class="close-panel" data-panel="notesPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <textarea class="notes-textarea" id="notesTextarea" placeholder="Start typing your notes..."></textarea>
+                <div class="notes-status" id="notesStatus">Saved</div>
+            </div>
+        </div>
+
+        <!-- Terminal Panel -->
+        <div class="feature-panel" id="terminalPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">terminal</span>
+                    Terminal
+                </div>
+                <button class="close-panel" data-panel="terminalPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="terminal-output" id="terminalOutput"></div>
+                <div class="terminal-input-row">
+                    <span class="terminal-prompt">$</span>
+                    <input type="text" id="terminalInput" placeholder="Type a command..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <!-- GitHub Panel -->
+        <div class="feature-panel" id="githubPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">code</span>
+                    GitHub Status
+                </div>
+                <button class="close-panel" data-panel="githubPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content" id="githubContent">
+                <div class="github-loading">
+                    <div class="spinner"></div>
+                    Loading GitHub data...
+                </div>
+            </div>
+        </div>
+
+        <!-- Day Panel -->
+        <div class="feature-panel" id="dayPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    Day Progress
+                </div>
+                <button class="close-panel" data-panel="dayPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="day-iframe-container">
+                    <iframe src="https://aaappp.onrender.com/day/" title="Day Progress" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Panel -->
+        <div class="feature-panel" id="calcPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">calculate</span>
+                    Calculator
+                </div>
+                <button class="close-panel" data-panel="calcPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <input type="text" class="calc-display" id="calcDisplay" readonly value="0">
+                <div class="calc-grid">
+                    <button class="calc-btn clear" data-calc="clear">C</button>
+                    <button class="calc-btn op" data-calc="(">(</button>
+                    <button class="calc-btn op" data-calc=")">)</button>
+                    <button class="calc-btn op" data-calc="/">÷</button>
+                    <button class="calc-btn" data-calc="7">7</button>
+                    <button class="calc-btn" data-calc="8">8</button>
+                    <button class="calc-btn" data-calc="9">9</button>
+                    <button class="calc-btn op" data-calc="*">×</button>
+                    <button class="calc-btn" data-calc="4">4</button>
+                    <button class="calc-btn" data-calc="5">5</button>
+                    <button class="calc-btn" data-calc="6">6</button>
+                    <button class="calc-btn op" data-calc="-">−</button>
+                    <button class="calc-btn" data-calc="1">1</button>
+                    <button class="calc-btn" data-calc="2">2</button>
+                    <button class="calc-btn" data-calc="3">3</button>
+                    <button class="calc-btn op" data-calc="+">+</button>
+                    <button class="calc-btn" data-calc="0">0</button>
+                    <button class="calc-btn" data-calc=".">.</button>
+                    <button class="calc-btn" data-calc="back">⌫</button>
+                    <button class="calc-btn eq" data-calc="=">=</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Picker Panel -->
+        <div class="feature-panel" id="colorPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">palette</span>
+                    Color Picker
+                </div>
+                <button class="close-panel" data-panel="colorPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="color-preview" id="colorPreview" style="background:#a8c7fa;"></div>
+                <div class="color-info">
+                    HEX: <span id="colorHex">#A8C7FA</span>
+                </div>
+                <div class="color-info">
+                    RGB: <span id="colorRgb">168, 199, 250</span>
+                </div>
+                <input type="color" id="colorInput" value="#a8c7fa" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;cursor:pointer;">
+            </div>
+        </div>
+
+        <!-- Weather Panel -->
+        <div class="feature-panel" id="weatherPanel">
+            <div class="feature-header">
+                <div class="title">
+                    <span class="material-symbols-outlined">cloud</span>
+                    Weather
+                </div>
+                <button class="close-panel" data-panel="weatherPanel">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="feature-content">
+                <div class="weather-display">
+                    <div class="weather-icon"><span class="material-symbols-outlined">sunny</span></div>
+                    <div class="weather-temp" id="weatherTemp">--°</div>
+                    <div class="weather-desc" id="weatherDesc">Loading...</div>
+                    <div class="weather-note">Weather data from open-meteo.com</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Whiteboard (full screen) -->
+        <div class="whiteboard-panel" id="whiteboardPanel">
+            <div class="wb-toolbar">
+                <button class="wb-tool" id="wbNoneBtn" title="None (pan/scroll)">
+                    <span class="material-symbols-outlined">pan_tool</span>
+                    None
+                </button>
+                <button class="wb-tool active" id="wbPenBtn" title="Pen">
+                    <span class="material-symbols-outlined">edit</span>
+                    Pen
+                </button>
+                <button class="wb-tool" id="wbTextBtn" title="Text">
+                    <span class="material-symbols-outlined">text_fields</span>
+                    Text
+                </button>
+                <button class="wb-tool" id="wbEraserBtn" title="Eraser">
+                    <span class="material-symbols-outlined">ink_eraser</span>
+                    Eraser
+                </button>
+                <input type="color" class="wb-color-input" id="wbColor" value="#000000" title="Color">
+                <input type="range" class="wb-size-slider" id="wbSize" min="1" max="30" value="3" title="Size">
+                <div class="wb-spacer"></div>
+                <button id="wbZoomOut" title="Zoom out">
+                    <span class="material-symbols-outlined">zoom_out</span>
+                </button>
+                <span class="wb-zoom-display" id="wbZoomDisplay">100%</span>
+                <button id="wbZoomIn" title="Zoom in">
+                    <span class="material-symbols-outlined">zoom_in</span>
+                </button>
+                <button id="wbClearBtn" title="Clear">
+                    <span class="material-symbols-outlined">delete</span>
+                    Clear
+                </button>
+                <button id="wbToggleTheme" title="Toggle theme">
+                    <span class="material-symbols-outlined" id="wbThemeIcon">dark_mode</span>
+                </button>
+                <button id="wbCloseBtn" title="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="wb-canvas-wrapper" id="wbCanvasWrapper">
+                <canvas class="wb-canvas" id="wbCanvas"></canvas>
+                <input type="text" class="wb-text-input" id="wbTextInput" placeholder="Type...">
+            </div>
+        </div>
+
+        <div class="prompt-container">
+            <div class="prompt-box">
+                <input type="text" id="promptInput" placeholder="Search or ask..." autocomplete="off">
+                <button class="prompt-btn" id="promptBtn" aria-label="Search">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="aurora-view">
+            <div class="aurora-field">
+                <div class="wave w-b"></div><div class="wave w-p"></div><div class="wave w-k"></div><div class="wave w-a"></div>
+            </div>
+            <div class="line"></div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Default greetings ----------
+        const DEFAULT_GREETINGS = [
+            "What's up, {name}?",
+            "How's it going, {name}?",
+            "Hi, {name}.",
+            "Hello, {name}.",
+            "How are you, {name}?",
+            "Hey, {name}.",
+            "Welcome back, {name}.",
+            "Good to see you, {name}.",
+            "Sup, {name}.",
+            "Let's get started, {name}.",
+            "What's the plan, {name}?",
+        ];
+
+        // ---------- Loading sequence ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const content = document.getElementById('content');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                content.classList.add('show');
+            }, 300);
+        });
+
+        // ---------- State ----------
+        const state = {
+            name: localStorage.getItem('g_name') || 'Friend',
+            links: JSON.parse(localStorage.getItem('g_links') || '{}'),
+            avatar: localStorage.getItem('g_avatar') || '',
+            apiKey: localStorage.getItem('g_api_key') || '',
+            githubUser: localStorage.getItem('g_github_user') || '',
+            todos: JSON.parse(localStorage.getItem('g_todos') || '[]'),
+            notes: localStorage.getItem('g_notes') || '',
+            greetings: JSON.parse(localStorage.getItem('g_greetings') || 'null')
+        };
+
+        // ---------- URL parameter overrides ----------
+        // Examples:
+        //   index.html?name=James
+        //   index.html?name=James&avatar=https://example.com/me.jpg
+        //   index.html?name=James&github=octocat
+        (function applyUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const consumed = new Set();
+
+            const nameParam = params.get('name');
+            if (nameParam && nameParam.trim()) {
+                state.name = nameParam.trim().slice(0, 18);
+                localStorage.setItem('g_name', state.name);
+                consumed.add('name');
+            }
+
+            const avatarParam = params.get('avatar');
+            if (avatarParam && avatarParam.trim()) {
+                state.avatar = avatarParam.trim();
+                localStorage.setItem('g_avatar', state.avatar);
+                consumed.add('avatar');
+            }
+
+            const githubParam = params.get('github');
+            if (githubParam && githubParam.trim()) {
+                state.githubUser = githubParam.trim();
+                localStorage.setItem('g_github_user', state.githubUser);
+                consumed.add('github');
+            }
+
+            // Remove the consumed params from the address bar so that any
+            // later edits made in Settings aren't overwritten on every reload.
+            if (consumed.size) {
+                consumed.forEach(k => params.delete(k));
+                const qs = params.toString();
+                const cleanUrl = window.location.pathname
+                    + (qs ? '?' + qs : '')
+                    + window.location.hash;
+                try { history.replaceState(null, '', cleanUrl); } catch (e) {}
+            }
+        })();
+
+        if (!state.greetings || !Array.isArray(state.greetings) || state.greetings.length === 0) {
+            state.greetings = [...DEFAULT_GREETINGS];
+        }
+
+        // ---------- DOM refs ----------
+        const out = document.getElementById('out');
+        const box = document.getElementById('box');
+        const mask = document.getElementById('mask');
+        const openBtn = document.getElementById('profileBtn');
+        const closeBtn = document.getElementById('close');
+        const promptInput = document.getElementById('promptInput');
+        const promptBtn = document.getElementById('promptBtn');
+        const pageTitle = document.getElementById('pageTitle');
+        const notifier = document.getElementById('notifier');
+        const profileInitials = document.getElementById('profileInitials');
+        const profileImg = document.getElementById('profileImg');
+        const dialogTitle = document.getElementById('dialogTitle');
+        const dialogContent = document.getElementById('dialogContent');
+        const appLauncherBtn = document.getElementById('appLauncherBtn');
+        const appGridPopup = document.getElementById('appGridPopup');
+
+        // Panels
+        const aiChat = document.getElementById('aiChat');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const clockPanel = document.getElementById('clockPanel');
+        const clockDisplay = document.getElementById('clockDisplay');
+        const clockDate = document.getElementById('clockDate');
+        const todoPanel = document.getElementById('todoPanel');
+        const todoInput = document.getElementById('todoInput');
+        const todoAddBtn = document.getElementById('todoAddBtn');
+        const todoList = document.getElementById('todoList');
+        const timerPanel = document.getElementById('timerPanel');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerToggle = document.getElementById('timerToggle');
+        const timerReset = document.getElementById('timerReset');
+        const stopwatchPanel = document.getElementById('stopwatchPanel');
+        const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+        const stopwatchToggle = document.getElementById('stopwatchToggle');
+        const stopwatchLap = document.getElementById('stopwatchLap');
+        const stopwatchReset = document.getElementById('stopwatchReset');
+        const stopwatchLaps = document.getElementById('stopwatchLaps');
+        const notesPanel = document.getElementById('notesPanel');
+        const notesTextarea = document.getElementById('notesTextarea');
+        const notesStatus = document.getElementById('notesStatus');
+        const terminalPanel = document.getElementById('terminalPanel');
+        const terminalOutput = document.getElementById('terminalOutput');
+        const terminalInput = document.getElementById('terminalInput');
+        const githubPanel = document.getElementById('githubPanel');
+        const githubContent = document.getElementById('githubContent');
+        const dayPanel = document.getElementById('dayPanel');
+        const calcPanel = document.getElementById('calcPanel');
+        const calcDisplay = document.getElementById('calcDisplay');
+        const colorPanel = document.getElementById('colorPanel');
+        const colorPreview = document.getElementById('colorPreview');
+        const colorHex = document.getElementById('colorHex');
+        const colorRgb = document.getElementById('colorRgb');
+        const colorInput = document.getElementById('colorInput');
+        const weatherPanel = document.getElementById('weatherPanel');
+        const weatherTemp = document.getElementById('weatherTemp');
+        const weatherDesc = document.getElementById('weatherDesc');
+        const whiteboardPanel = document.getElementById('whiteboardPanel');
+
+        let notifierTimeout = null;
+        let isAIMode = false;
+        let isProcessing = false;
+
+        // Panel open/close helpers
+        const allPanels = [aiChat, clockPanel, todoPanel, timerPanel, stopwatchPanel, notesPanel, terminalPanel, githubPanel, dayPanel, calcPanel, colorPanel, weatherPanel];
+        function closeAllPanels() {
+            allPanels.forEach(p => p.classList.remove('open'));
+        }
+        function openPanel(panel) {
+            closeAllPanels();
+            panel.classList.add('open');
+        }
+
+        // Close buttons
+        document.querySelectorAll('.close-panel').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const target = document.getElementById(btn.dataset.panel);
+                if (target) target.classList.remove('open');
+                if (btn.dataset.panel === 'aiChat') {
+                    messagesContainer.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">chat</span>Ask me anything!</div>`;
+                }
+            });
+        });
+
+        // Click outside to close panels (but not the app grid popup)
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.app-grid-popup') && !e.target.closest('.app-launcher-btn')) {
+                appGridPopup.classList.remove('open');
+            }
+            if (e.target.closest('.feature-panel') || e.target.closest('.prompt-container') || e.target.closest('.top-controls') || e.target.closest('.app-grid-popup') || e.target.closest('.whiteboard-panel') || e.target.closest('.dialog') || e.target.closest('.mask')) return;
+            closeAllPanels();
+        });
+
+        // ---------- App Launcher ----------
+        appLauncherBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            appGridPopup.classList.toggle('open');
+        });
+
+        // App grid item clicks open panels
+        document.querySelectorAll('.app-grid-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const panelId = item.dataset.panel;
+                if (panelId) {
+                    const panel = document.getElementById(panelId);
+                    if (panel) {
+                        if (panelId === 'clockPanel') { openPanel(clockPanel); startClock(); }
+                        else if (panelId === 'todoPanel') { openPanel(todoPanel); renderTodos(); }
+                        else if (panelId === 'timerPanel') { openPanel(timerPanel); }
+                        else if (panelId === 'stopwatchPanel') { openPanel(stopwatchPanel); }
+                        else if (panelId === 'notesPanel') { openPanel(notesPanel); loadNotes(); }
+                        else if (panelId === 'terminalPanel') { openPanel(terminalPanel); focusTerminal(); }
+                        else if (panelId === 'githubPanel') { openPanel(githubPanel); loadGithub(); }
+                        else if (panelId === 'dayPanel') { openPanel(dayPanel); }
+                        else if (panelId === 'aiChat') { openPanel(aiChat); }
+                        else if (panelId === 'calcPanel') { openPanel(calcPanel); resetCalc(); }
+                        else if (panelId === 'colorPanel') { openPanel(colorPanel); initColorPicker(); }
+                        else if (panelId === 'weatherPanel') { openPanel(weatherPanel); loadWeather(); }
+                        else if (panelId === 'whiteboardPanel') { openWhiteboard(); }
+                    }
+                }
+                appGridPopup.classList.remove('open');
+            });
+        });
+
+        // ---------- Greeting ----------
+        function getGreeting() {
+            if (!state.greetings || state.greetings.length === 0) {
+                return `Hello, ${state.name}.`;
+            }
+            const template = state.greetings[Math.floor(Math.random() * state.greetings.length)];
+            return template.replace(/\{name\}/g, state.name);
+        }
+
+        function updateProfileUI() {
+            if (state.avatar && state.avatar.trim()) {
+                profileImg.src = state.avatar;
+                profileImg.style.display = 'block';
+                profileInitials.style.display = 'none';
+            } else {
+                profileImg.style.display = 'none';
+                profileInitials.style.display = 'block';
+                profileInitials.textContent = state.name.charAt(0).toUpperCase();
+            }
+        }
+
+        function draw() {
+            out.textContent = getGreeting();
+            pageTitle.textContent = `Home \\ ${state.name}`;
+            updateProfileUI();
+        }
+
+        function saveGreetings() {
+            localStorage.setItem('g_greetings', JSON.stringify(state.greetings));
+        }
+
+        // ---------- Notifier ----------
+        function showNotifier(message, type = 'success') {
+            if (notifierTimeout) clearTimeout(notifierTimeout);
+            const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+            notifier.innerHTML = `<span class="material-symbols-outlined">${icon}</span> ${message}`;
+            notifier.className = 'notifier ' + type;
+            void notifier.offsetWidth;
+            notifier.classList.add('show');
+            notifierTimeout = setTimeout(() => notifier.classList.remove('show'), 2500);
+        }
+
+        // ---------- Settings dialog ----------
+        function renderGreetingEditor() {
+            let html = `
+                <div class="settings-section-title">Custom Greetings</div>
+                <div style="font-size:0.8rem;color:var(--sec);margin-bottom:10px;">
+                    Use <strong>{name}</strong> as a placeholder for your name.
+                </div>
+                <div class="greeting-list" id="greetingList">
+            `;
+            state.greetings.forEach((g, i) => {
+                html += `
+                    <div class="greeting-item">
+                        <input type="text" data-index="${i}" value="${g.replace(/"/g, '&quot;')}" placeholder="Greeting...">
+                        <button class="greeting-del" data-index="${i}">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                `;
+            });
+            html += `</div>
+                <div class="greeting-add-row">
+                    <input type="text" id="newGreetingInput" placeholder="Add new greeting...">
+                    <button id="addGreetingBtn">Add</button>
+                </div>
+                <button class="greeting-reset-btn" id="resetGreetingsBtn">Reset to Defaults</button>
+            `;
+            return html;
+        }
+
+        function bindGreetingEditor() {
+            const greetingList = document.getElementById('greetingList');
+            const newGreetingInput = document.getElementById('newGreetingInput');
+            const addGreetingBtn = document.getElementById('addGreetingBtn');
+            const resetGreetingsBtn = document.getElementById('resetGreetingsBtn');
+
+            if (greetingList) {
+                greetingList.querySelectorAll('input[type="text"]').forEach(inp => {
+                    inp.addEventListener('change', (e) => {
+                        const idx = parseInt(e.target.dataset.index);
+                        const val = e.target.value.trim();
+                        if (val) {
+                            state.greetings[idx] = val;
+                            saveGreetings();
+                        } else {
+                            // If empty, remove
+                            state.greetings.splice(idx, 1);
+                            saveGreetings();
+                            refreshGreetingList();
+                        }
+                    });
+                });
+                greetingList.querySelectorAll('.greeting-del').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const idx = parseInt(e.target.closest('.greeting-del').dataset.index);
+                        state.greetings.splice(idx, 1);
+                        saveGreetings();
+                        refreshGreetingList();
+                    });
+                });
+            }
+            if (addGreetingBtn && newGreetingInput) {
+                addGreetingBtn.addEventListener('click', () => {
+                    const val = newGreetingInput.value.trim();
+                    if (val) {
+                        state.greetings.push(val);
+                        saveGreetings();
+                        newGreetingInput.value = '';
+                        refreshGreetingList();
+                    }
+                });
+                newGreetingInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') addGreetingBtn.click();
+                });
+            }
+            if (resetGreetingsBtn) {
+                resetGreetingsBtn.addEventListener('click', () => {
+                    state.greetings = [...DEFAULT_GREETINGS];
+                    saveGreetings();
+                    refreshGreetingList();
+                    showNotifier('Greetings reset to defaults');
+                });
+            }
+        }
+
+        function refreshGreetingList() {
+            const greetingList = document.getElementById('greetingList');
+            if (!greetingList) return;
+            let html = '';
+            state.greetings.forEach((g, i) => {
+                html += `
+                    <div class="greeting-item">
+                        <input type="text" data-index="${i}" value="${g.replace(/"/g, '&quot;')}" placeholder="Greeting...">
+                        <button class="greeting-del" data-index="${i}">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                `;
+            });
+            greetingList.innerHTML = html;
+            bindGreetingEditor();
+        }
+
+        function view(show, title = 'Settings', content = null) {
+            if (show) {
+                dialogTitle.textContent = title;
+                if (content) {
+                    dialogContent.innerHTML = content;
+                } else {
+                    dialogContent.innerHTML = `
+                        <div class="f-group">
+                            <label class="f-lbl" for="userIn">Preferred Name</label>
+                            <input type="text" id="userIn" class="f-in" placeholder="Enter name..." maxlength="18" value="${state.name}">
+                        </div>
+                        <div class="f-group">
+                            <label class="f-lbl">Profile Image</label>
+                            <div class="upload-area" id="uploadArea">
+                                <img id="uploadPreview" class="upload-preview" alt="Preview" src="${state.avatar || ''}">
+                                <div class="upload-text" id="uploadText" style="${state.avatar ? 'display:none' : ''}">
+                                    <strong>Click to upload</strong> or drag & drop<br>
+                                    <span style="font-size:0.8rem;color:var(--sec);">PNG, JPG, GIF, WEBP (max 2MB)</span>
+                                </div>
+                                <input type="file" id="fileInput" accept="image/*">
+                                <div class="upload-actions">
+                                    <button class="btn-upload" id="uploadBtn">
+                                        <span class="material-symbols-outlined">upload</span> Upload
+                                    </button>
+                                    <button class="btn-remove" id="removeAvatarBtn">
+                                        <span class="material-symbols-outlined">delete</span> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="f-group">
+                            <label class="f-lbl">Or use URL</label>
+                            <input type="text" id="avatarIn" class="f-in" placeholder="https://example.com/avatar.jpg" value="${state.avatar}">
+                        </div>
+                        <div class="f-group">
+                            <label class="f-lbl">GitHub Username</label>
+                            <input type="text" id="githubIn" class="f-in" placeholder="octocat" value="${state.githubUser}">
+                            <div style="margin-top:6px;font-size:0.75rem;color:var(--sec);">
+                                Type <strong>github</strong> in the prompt to see your GitHub status.
+                            </div>
+                        </div>
+                        <div class="f-group">
+                            <label class="f-lbl">Groq API Key</label>
+                            <input type="password" id="apiKeyIn" class="f-in api-key" placeholder="gsk_..." value="${state.apiKey}">
+                            <div style="margin-top:6px;font-size:0.75rem;color:var(--sec);">
+                                Get your API key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--blue);text-decoration:none;">console.groq.com/keys</a>
+                            </div>
+                        </div>
+                        ${renderGreetingEditor()}
+                        <button class="f-btn" id="save">Confirm</button>
+                    `;
+                    setTimeout(() => {
+                        const userIn = document.getElementById('userIn');
+                        const avatarIn = document.getElementById('avatarIn');
+                        const githubIn = document.getElementById('githubIn');
+                        const apiKeyIn = document.getElementById('apiKeyIn');
+                        const saveBtn = document.getElementById('save');
+                        const uploadArea = document.getElementById('uploadArea');
+                        const fileInput = document.getElementById('fileInput');
+                        const uploadPreview = document.getElementById('uploadPreview');
+                        const uploadText = document.getElementById('uploadText');
+                        const uploadBtn = document.getElementById('uploadBtn');
+                        const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+
+                        bindGreetingEditor();
+
+                        function handleImageUpload(file) {
+                            if (!file) return;
+                            if (!file.type.startsWith('image/')) { showNotifier('Please upload an image file', 'error'); return; }
+                            if (file.size > 2 * 1024 * 1024) { showNotifier('Image must be under 2MB', 'error'); return; }
+                            compressImage(file).then(dataUrl => {
+                                state.avatar = dataUrl;
+                                saveAvatar();
+                                draw();
+                                if (uploadPreview) { uploadPreview.src = dataUrl; uploadPreview.classList.add('show'); }
+                                if (uploadText) uploadText.style.display = 'none';
+                                showNotifier('Profile image uploaded!');
+                            }).catch(() => showNotifier('Failed to process image', 'error'));
+                        }
+
+                        if (uploadArea) {
+                            uploadArea.addEventListener('click', (e) => {
+                                if (e.target.closest('.upload-actions')) return;
+                                fileInput.click();
+                            });
+                            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+                            uploadArea.addEventListener('dragleave', (e) => { e.preventDefault(); uploadArea.classList.remove('dragover'); });
+                            uploadArea.addEventListener('drop', (e) => {
+                                e.preventDefault();
+                                uploadArea.classList.remove('dragover');
+                                if (e.dataTransfer.files.length) handleImageUpload(e.dataTransfer.files[0]);
+                            });
+                        }
+                        if (fileInput) fileInput.addEventListener('change', (e) => {
+                            if (e.target.files.length) handleImageUpload(e.target.files[0]);
+                            fileInput.value = '';
+                        });
+                        if (uploadBtn) uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+                        if (removeAvatarBtn) removeAvatarBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            state.avatar = '';
+                            saveAvatar();
+                            draw();
+                            if (uploadPreview) { uploadPreview.classList.remove('show'); }
+                            if (uploadText) uploadText.style.display = 'block';
+                            showNotifier('Avatar removed');
+                        });
+
+                        if (avatarIn) {
+                            avatarIn.addEventListener('input', () => {
+                                state.avatar = avatarIn.value;
+                                saveAvatar();
+                                draw();
+                            });
+                        }
+                        if (userIn && saveBtn) {
+                            userIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveBtn.click(); });
+                            saveBtn.addEventListener('click', () => {
+                                const v = userIn.value.trim();
+                                const a = avatarIn.value.trim();
+                                const g = githubIn.value.trim();
+                                const k = apiKeyIn.value.trim();
+                                if (v) { state.name = v; localStorage.setItem('g_name', v); }
+                                if (a) { state.avatar = a; saveAvatar(); }
+                                if (g) { state.githubUser = g; localStorage.setItem('g_github_user', g); }
+                                if (k) { state.apiKey = k; saveApiKey(); }
+                                // Save any pending greeting changes
+                                saveGreetings();
+                                draw();
+                                view(false);
+                                showNotifier('Settings updated!');
+                            });
+                        }
+                    }, 0);
+                }
+                box.classList.add('open');
+                mask.classList.add('active');
+            } else {
+                box.classList.remove('open');
+                mask.classList.remove('active');
+            }
+        }
+
+        function saveAvatar() { localStorage.setItem('g_avatar', state.avatar); }
+        function saveApiKey() { localStorage.setItem('g_api_key', state.apiKey); }
+
+        function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width, height = img.height;
+                        if (width > maxWidth) { height = height * (maxWidth / width); width = maxWidth; }
+                        if (height > maxHeight) { width = width * (maxHeight / height); height = maxHeight; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ---------- Markdown parser ----------
+        function parseMarkdown(text) {
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            text = text.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code.trim()}</code></pre>`);
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+            text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+            text = text.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+            text = text.replace(/^---$/gm, '<hr>');
+            text = text.replace(/^\*\*\*$/gm, '<hr>');
+            text = text.replace(/^[-*+] (.+)$/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
+            text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+            const orderedMatch = text.match(/(<li>.*<\/li>\n?)+/g);
+            if (orderedMatch) {
+                orderedMatch.forEach(m => {
+                    if (!m.includes('<ul>')) text = text.replace(m, `<ol>${m}</ol>`);
+                });
+            }
+            text = text.split('\n\n').map(para => {
+                if (!para.match(/^<[h|u|o|p|b|t|d|pre|blockquote]/)) return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+                return para;
+            }).join('');
+            return text;
+        }
+
+        // ---------- AI helpers ----------
+        function addMessage(text, type = 'ai') {
+            const emptyState = messagesContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            if (type === 'ai') msg.innerHTML = parseMarkdown(text);
+            else msg.textContent = text;
+            messagesContainer.appendChild(msg);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        function addTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message ai';
+            indicator.id = 'typingIndicator';
+            indicator.innerHTML = '<span class="typing"></span><span class="typing" style="animation-delay:0.2s"></span><span class="typing" style="animation-delay:0.4s"></span>';
+            messagesContainer.appendChild(indicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        function removeTypingIndicator() {
+            const ind = document.getElementById('typingIndicator');
+            if (ind) ind.remove();
+        }
+
+        const NO_CREDITS_MSG = "You have run out of AI credits, speak to James to get more, or switch to a more basic model.";
+
+        async function queryGroq(prompt) {
+            if (!state.apiKey) {
+                showNotifier('Please add your Groq API key in settings', 'error');
+                return 'Please add your Groq API key in settings (click the profile icon)';
+            }
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${state.apiKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'openai/gpt-oss-120b',
+                        messages: [
+                            { role: 'system', content: 'You are a helpful assistant. Keep answers extremely short and concise. Maximum 2-3 sentences or a brief list. No fluff, no repetition, no unnecessary detail.' },
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.5,
+                        max_tokens: 256
+                    })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errMsg = errorData.error?.message || '';
+                    // Detect credit/rate limit issues
+                    if (response.status === 402 || response.status === 429 ||
+                        /credit|quota|rate.?limit|insufficient|billing|exceed/i.test(errMsg)) {
+                        return NO_CREDITS_MSG;
+                    }
+                    throw new Error(errMsg || 'API request failed');
+                }
+                const data = await response.json();
+                const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                if (!content || !content.trim()) {
+                    return NO_CREDITS_MSG;
+                }
+                return content;
+            } catch (error) {
+                console.error('Groq API error:', error);
+                // Network / fetch errors also default to the credits message
+                if (/fetch|network|failed|load/i.test(error.message)) {
+                    return NO_CREDITS_MSG;
+                }
+                return `Error: ${error.message}`;
+            }
+        }
+
+        async function handleAIMode(query) {
+            if (isProcessing || !query.trim()) return;
+            isProcessing = true;
+            openPanel(aiChat);
+            addMessage(query, 'user');
+            promptInput.value = '';
+            addTypingIndicator();
+            const response = await queryGroq(query);
+            removeTypingIndicator();
+            addMessage(response, 'ai');
+            isProcessing = false;
+        }
+
+        // ---------- Search / quicklink handling ----------
+        function handleSearch(query) {
+            if (!query.trim()) return;
+            
+            const parts = query.trim().split(/\s+/);
+            const first = parts[0];
+            
+            if (state.links[first]) {
+                let baseUrl = state.links[first];
+                let path = parts.slice(1).join('/');
+                let url = baseUrl;
+                if (path) {
+                    url = baseUrl.replace(/\/$/, '') + '/' + path;
+                }
+                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+                
+                promptInput.value = '';
+                out.classList.add('quicklink-redirect');
+                out.classList.add('active');
+                showNotifier(`Opening "${first}"...`);
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 500);
+                return;
+            }
+            
+            if (query.includes('.') && !query.includes(' ')) {
+                let url = query;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+                promptInput.value = '';
+                window.location.href = url;
+                return;
+            }
+            
+            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            promptInput.value = '';
+        }
+
+        // ---------- GitHub ----------
+        async function loadGithub() {
+            if (!state.githubUser) {
+                githubContent.innerHTML = `<div class="github-error">
+                    No GitHub username set.<br>
+                    <span style="color:var(--sec);font-size:0.85rem;">Open settings (profile icon) to add one.</span>
+                </div>`;
+                return;
+            }
+
+            githubContent.innerHTML = `<div class="github-loading"><div class="spinner"></div>Loading GitHub data...</div>`;
+
+            try {
+                const user = state.githubUser;
+                const headers = { 'Accept': 'application/vnd.github+json' };
+
+                const [userRes, reposRes, eventsRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${user}`, { headers }),
+                    fetch(`https://api.github.com/users/${user}/repos?per_page=100&sort=updated`, { headers }),
+                    fetch(`https://api.github.com/users/${user}/events/public?per_page=100`, { headers })
+                ]);
+
+                if (!userRes.ok) {
+                    if (userRes.status === 404) throw new Error('GitHub user not found');
+                    throw new Error('Failed to fetch GitHub data');
+                }
+
+                const userData = await userRes.json();
+                const repos = reposRes.ok ? await reposRes.json() : [];
+                const events = eventsRes.ok ? await eventsRes.json() : [];
+
+                const publicRepos = userData.public_repos || 0;
+                const followers = userData.followers || 0;
+                const following = userData.following || 0;
+                
+                let totalStars = 0;
+                let totalForks = 0;
+                let totalWatchers = 0;
+                let openIssues = 0;
+                const languages = {};
+
+                repos.forEach(repo => {
+                    totalStars += repo.stargazers_count || 0;
+                    totalForks += repo.forks_count || 0;
+                    totalWatchers += repo.watchers_count || 0;
+                    openIssues += repo.open_issues_count || 0;
+                    if (repo.language) {
+                        languages[repo.language] = (languages[repo.language] || 0) + 1;
+                    }
+                });
+
+                const totalLangRepos = Object.values(languages).reduce((a, b) => a + b, 0);
+                const langColors = {
+                    JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5',
+                    HTML: '#e34c26', CSS: '#563d7c', Java: '#b07219', 'C++': '#f34b7d',
+                    C: '#555555', 'C#': '#178600', Go: '#00ADD8', Rust: '#dea584',
+                    Ruby: '#701516', PHP: '#4F5D95', Swift: '#ffac45', Kotlin: '#A97BFF',
+                    Shell: '#89e051', Vue: '#41b883', React: '#61dafb', Svelte: '#ff3e00',
+                    Dart: '#00B4AB', Scala: '#c22d40', Lua: '#000080', Perl: '#0298c3'
+                };
+                const getLangColor = (lang) => langColors[lang] || '#8b949e';
+
+                let langBarHtml = '';
+                let langLegendHtml = '';
+                if (totalLangRepos > 0) {
+                    const sortedLangs = Object.entries(languages).sort((a, b) => b[1] - a[1]);
+                    sortedLangs.forEach(([lang, count]) => {
+                        const pct = ((count / totalLangRepos) * 100).toFixed(1);
+                        const color = getLangColor(lang);
+                        langBarHtml += `<div class="gh-lang-segment" style="width:${pct}%;background:${color};" title="${lang}: ${pct}%"></div>`;
+                        langLegendHtml += `
+                            <div class="gh-lang-item">
+                                <span class="gh-lang-dot" style="background:${color};"></span>
+                                <span class="gh-lang-name">${lang}</span>
+                                <span class="gh-lang-pct">${pct}%</span>
+                            </div>`;
+                    });
+                } else {
+                    langBarHtml = '<div style="width:100%;background:rgba(255,255,255,0.05);height:100%;"></div>';
+                }
+
+                const now = new Date();
+                const days = 14;
+                const dayCounts = {};
+                for (let i = 0; i < days; i++) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().slice(0, 10);
+                    dayCounts[key] = 0;
+                }
+                events.forEach(ev => {
+                    if (!ev.created_at) return;
+                    const key = ev.created_at.slice(0, 10);
+                    if (dayCounts[key] !== undefined) dayCounts[key]++;
+                });
+                const dayKeys = Object.keys(dayCounts).reverse();
+                const maxCount = Math.max(1, ...Object.values(dayCounts));
+                let activityHtml = '';
+                dayKeys.forEach(key => {
+                    const count = dayCounts[key];
+                    const height = count === 0 ? 2 : Math.max(4, (count / maxCount) * 70);
+                    const dayLabel = new Date(key).toLocaleDateString(undefined, { weekday: 'short' });
+                    activityHtml += `<div class="gh-activity-bar" style="height:${height}px;" data-count="${count} events" title="${key}: ${count} events"></div>`;
+                });
+
+                const topRepos = repos
+                    .filter(r => !r.fork)
+                    .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+                    .slice(0, 5);
+
+                let repoHtml = '';
+                if (topRepos.length === 0) {
+                    repoHtml = '<div class="gh-empty">No public repos</div>';
+                } else {
+                    topRepos.forEach(repo => {
+                        const desc = repo.description ? repo.description : 'No description';
+                        const langColor = repo.language ? getLangColor(repo.language) : null;
+                        repoHtml += `
+                            <div class="gh-repo">
+                                <div class="gh-repo-info">
+                                    <a class="gh-repo-name" href="${repo.html_url}" target="_blank">${repo.name}</a>
+                                    <div class="gh-repo-desc">${desc}</div>
+                                </div>
+                                <div class="gh-repo-stats">
+                                    ${repo.language ? `<span><span class="gh-lang-dot" style="background:${langColor};display:inline-block;"></span>${repo.language}</span>` : ''}
+                                    <span><span class="material-symbols-outlined">star</span>${repo.stargazers_count || 0}</span>
+                                    <span><span class="material-symbols-outlined">fork_right</span>${repo.forks_count || 0}</span>
+                                </div>
+                            </div>`;
+                    });
+                }
+
+                let openPRs = 0;
+                events.forEach(ev => {
+                    if (ev.type === 'PullRequestEvent' && ev.payload && ev.payload.action === 'opened') {
+                        openPRs++;
+                    }
+                });
+
+                const createdDate = new Date(userData.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+                githubContent.innerHTML = `
+                    <div class="gh-profile">
+                        <img class="gh-avatar" src="${userData.avatar_url}" alt="${userData.login}">
+                        <div class="gh-profile-info">
+                            <div class="gh-name">${userData.name || userData.login}</div>
+                            <a class="gh-login" href="${userData.html_url}" target="_blank">@${userData.login}</a>
+                            ${userData.bio ? `<div class="gh-bio">${userData.bio}</div>` : ''}
+                            <div class="gh-meta">
+                                ${userData.location ? `<span><span class="material-symbols-outlined">location_on</span>${userData.location}</span>` : ''}
+                                ${userData.company ? `<span><span class="material-symbols-outlined">business</span>${userData.company}</span>` : ''}
+                                <span><span class="material-symbols-outlined">calendar_today</span>Joined ${createdDate}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gh-stats-grid">
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">folder</span></div>
+                            <div class="gh-stat-value">${publicRepos}</div>
+                            <div class="gh-stat-label">Repos</div>
+                        </div>
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">star</span></div>
+                            <div class="gh-stat-value">${totalStars}</div>
+                            <div class="gh-stat-label">Stars</div>
+                        </div>
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">fork_right</span></div>
+                            <div class="gh-stat-value">${totalForks}</div>
+                            <div class="gh-stat-label">Forks</div>
+                        </div>
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">group</span></div>
+                            <div class="gh-stat-value">${followers}</div>
+                            <div class="gh-stat-label">Followers</div>
+                        </div>
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">person_add</span></div>
+                            <div class="gh-stat-value">${following}</div>
+                            <div class="gh-stat-label">Following</div>
+                        </div>
+                        <div class="gh-stat-card">
+                            <div class="gh-stat-icon"><span class="material-symbols-outlined">error</span></div>
+                            <div class="gh-stat-value">${openIssues}</div>
+                            <div class="gh-stat-label">Open Issues</div>
+                        </div>
+                    </div>
+
+                    <div class="gh-section-title">Activity (last 14 days)</div>
+                    <div class="gh-activity-chart">${activityHtml}</div>
+                    <div class="gh-activity-labels">
+                        <span>${dayKeys[0] ? new Date(dayKeys[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}</span>
+                        <span>Today</span>
+                    </div>
+
+                    ${totalLangRepos > 0 ? `
+                        <div class="gh-section-title">Languages</div>
+                        <div class="gh-lang-bar">${langBarHtml}</div>
+                        <div class="gh-lang-legend">${langLegendHtml}</div>
+                    ` : ''}
+
+                    <div class="gh-section-title">Top Repositories</div>
+                    <div class="gh-repo-list">${repoHtml}</div>
+                `;
+            } catch (err) {
+                console.error('GitHub error:', err);
+                githubContent.innerHTML = `<div class="github-error">
+                    ${err.message}<br>
+                    <span style="color:var(--sec);font-size:0.85rem;">Check your GitHub username in settings.</span>
+                </div>`;
+            }
+        }
+
+        // ---------- Calculator ----------
+        let calcExpression = '';
+        function resetCalc() {
+            calcExpression = '';
+            calcDisplay.value = '0';
+        }
+        document.querySelectorAll('.calc-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.calc;
+                if (val === 'clear') {
+                    resetCalc();
+                } else if (val === 'back') {
+                    calcExpression = calcExpression.slice(0, -1);
+                    calcDisplay.value = calcExpression || '0';
+                } else if (val === '=') {
+                    try {
+                        const result = Function('"use strict";return (' + calcExpression + ')')();
+                        calcDisplay.value = result;
+                        calcExpression = String(result);
+                    } catch {
+                        calcDisplay.value = 'Error';
+                        calcExpression = '';
+                    }
+                } else {
+                    calcExpression += val;
+                    calcDisplay.value = calcExpression;
+                }
+            });
+        });
+
+        // ---------- Color Picker ----------
+        function initColorPicker() {
+            colorInput.value = '#a8c7fa';
+            updateColorPreview('#a8c7fa');
+        }
+        function updateColorPreview(hex) {
+            colorPreview.style.background = hex;
+            colorHex.textContent = hex.toUpperCase();
+            const r = parseInt(hex.slice(1,3),16);
+            const g = parseInt(hex.slice(3,5),16);
+            const b = parseInt(hex.slice(5,7),16);
+            colorRgb.textContent = `${r}, ${g}, ${b}`;
+        }
+        colorInput.addEventListener('input', (e) => {
+            updateColorPreview(e.target.value);
+        });
+
+        // ---------- Weather (simple open-meteo) ----------
+        async function loadWeather() {
+            weatherTemp.textContent = '--°';
+            weatherDesc.textContent = 'Loading...';
+            try {
+                const lat = 51.5074, lon = -0.1278;
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                const data = await res.json();
+                if (data.current_weather) {
+                    const temp = Math.round(data.current_weather.temperature);
+                    weatherTemp.textContent = `${temp}°C`;
+                    const code = data.current_weather.weathercode;
+                    const desc = weatherCodeToText(code);
+                    weatherDesc.textContent = desc;
+                } else {
+                    weatherDesc.textContent = 'Unavailable';
+                }
+            } catch {
+                weatherDesc.textContent = 'Failed to load';
+            }
+        }
+        function weatherCodeToText(code) {
+            const map = {
+                0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+                45: 'Fog', 48: 'Depositing rime fog', 51: 'Light drizzle', 53: 'Moderate drizzle',
+                55: 'Dense drizzle', 61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+                71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow', 95: 'Thunderstorm'
+            };
+            return map[code] || 'Unknown';
+        }
+
+        // ---------- Whiteboard ----------
+        const wbCanvas = document.getElementById('wbCanvas');
+        const wbCtx = wbCanvas.getContext('2d');
+        const wbNoneBtn = document.getElementById('wbNoneBtn');
+        const wbPenBtn = document.getElementById('wbPenBtn');
+        const wbTextBtn = document.getElementById('wbTextBtn');
+        const wbEraserBtn = document.getElementById('wbEraserBtn');
+        const wbColor = document.getElementById('wbColor');
+        const wbSize = document.getElementById('wbSize');
+        const wbClearBtn = document.getElementById('wbClearBtn');
+        const wbToggleTheme = document.getElementById('wbToggleTheme');
+        const wbThemeIcon = document.getElementById('wbThemeIcon');
+        const wbCloseBtn = document.getElementById('wbCloseBtn');
+        const wbCanvasWrapper = document.getElementById('wbCanvasWrapper');
+        const wbTextInput = document.getElementById('wbTextInput');
+        const wbZoomIn = document.getElementById('wbZoomIn');
+        const wbZoomOut = document.getElementById('wbZoomOut');
+        const wbZoomDisplay = document.getElementById('wbZoomDisplay');
+
+        let wbTool = 'pen';
+        let wbDrawing = false;
+        let wbLastX = 0, wbLastY = 0;
+        let wbIsDark = localStorage.getItem('g_wb_dark') === 'true';
+        let wbZoom = parseFloat(localStorage.getItem('g_wb_zoom')) || 1.0;
+        let wbResizeTimeout = null;
+        // Off-screen canvas to hold the actual drawing (so we can zoom)
+        const wbOffscreen = document.createElement('canvas');
+        const wbOffCtx = wbOffscreen.getContext('2d');
+        let wbBaseWidth = 0, wbBaseHeight = 0;
+
+        function initOffscreen(w, h) {
+            wbOffscreen.width = w;
+            wbOffscreen.height = h;
+            wbOffCtx.lineCap = 'round';
+            wbOffCtx.lineJoin = 'round';
+        }
+
+        function redrawCanvas() {
+            // Clear visible canvas
+            wbCtx.save();
+            wbCtx.setTransform(1, 0, 0, 1, 0, 0);
+            wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+            wbCtx.restore();
+            // Draw offscreen with zoom
+            const dpr = window.devicePixelRatio || 1;
+            wbCtx.save();
+            wbCtx.setTransform(dpr * wbZoom, 0, 0, dpr * wbZoom, 0, 0);
+            wbCtx.drawImage(wbOffscreen, 0, 0);
+            wbCtx.restore();
+            wbZoomDisplay.textContent = Math.round(wbZoom * 100) + '%';
+        }
+
+        function resizeWbCanvas() {
+            const rect = wbCanvasWrapper.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            wbCanvas.width = rect.width * dpr;
+            wbCanvas.height = rect.height * dpr;
+            wbCanvas.style.width = rect.width + 'px';
+            wbCanvas.style.height = rect.height + 'px';
+            // Set offscreen size only if it's not already set (preserve drawing on window resize)
+            if (wbBaseWidth === 0 || wbBaseHeight === 0) {
+                wbBaseWidth = rect.width;
+                wbBaseHeight = rect.height;
+                initOffscreen(wbBaseWidth, wbBaseHeight);
+            }
+            redrawCanvas();
+            applyWbTheme();
+        }
+
+        function applyWbTheme() {
+            if (wbIsDark) {
+                whiteboardPanel.classList.add('dark');
+                wbThemeIcon.textContent = 'light_mode';
+                wbCanvasWrapper.style.background = '#1a1a1a';
+            } else {
+                whiteboardPanel.classList.remove('dark');
+                wbThemeIcon.textContent = 'dark_mode';
+                wbCanvasWrapper.style.background = '#ffffff';
+            }
+        }
+
+        function openWhiteboard() {
+            whiteboardPanel.classList.add('open');
+            closeAllPanels();
+            // Restore saved theme
+            wbIsDark = localStorage.getItem('g_wb_dark') === 'true';
+            applyWbTheme();
+            wbColor.value = '#000000';
+            // Restore saved zoom
+            wbZoom = parseFloat(localStorage.getItem('g_wb_zoom')) || 1.0;
+            setWbTool('pen');
+            setTimeout(() => {
+                resizeWbCanvas();
+            }, 20);
+        }
+
+        function closeWhiteboard() {
+            whiteboardPanel.classList.remove('open');
+            hideWbTextInput();
+            // Save theme + zoom
+            localStorage.setItem('g_wb_dark', wbIsDark ? 'true' : 'false');
+            localStorage.setItem('g_wb_zoom', String(wbZoom));
+        }
+
+        function setWbTool(tool) {
+            wbTool = tool;
+            [wbNoneBtn, wbPenBtn, wbTextBtn, wbEraserBtn].forEach(b => b.classList.remove('active'));
+            if (tool === 'none') wbNoneBtn.classList.add('active');
+            else if (tool === 'pen') wbPenBtn.classList.add('active');
+            else if (tool === 'text') wbTextBtn.classList.add('active');
+            else if (tool === 'eraser') wbEraserBtn.classList.add('active');
+
+            if (tool === 'text') {
+                wbCanvas.style.cursor = 'text';
+            } else if (tool === 'none') {
+                wbCanvas.style.cursor = 'grab';
+                hideWbTextInput();
+            } else {
+                wbCanvas.style.cursor = 'crosshair';
+                hideWbTextInput();
+            }
+        }
+
+        function hideWbTextInput() {
+            wbTextInput.classList.remove('active');
+            wbTextInput.value = '';
+        }
+
+        function getCanvasPos(e) {
+            const rect = wbCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Convert screen coords to offscreen coords (account for zoom)
+            return {
+                x: (clientX - rect.left) / wbZoom,
+                y: (clientY - rect.top) / wbZoom
+            };
+        }
+
+        function wbStart(e) {
+            if (wbTool === 'none') return;
+            if (wbTool === 'text') {
+                const rect = wbCanvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const screenX = clientX - rect.left;
+                const screenY = clientY - rect.top;
+                wbTextInput.style.left = screenX + 'px';
+                wbTextInput.style.top = screenY + 'px';
+                wbTextInput.style.color = wbColor.value;
+                wbTextInput.style.fontSize = (parseInt(wbSize.value) * 4 + 12) + 'px';
+                wbTextInput.classList.add('active');
+                wbTextInput.focus();
+                return;
+            }
+            e.preventDefault();
+            wbDrawing = true;
+            const pos = getCanvasPos(e);
+            wbLastX = pos.x;
+            wbLastY = pos.y;
+        }
+
+        function wbMove(e) {
+            if (!wbDrawing) return;
+            e.preventDefault();
+            const pos = getCanvasPos(e);
+            wbOffCtx.beginPath();
+            wbOffCtx.moveTo(wbLastX, wbLastY);
+            wbOffCtx.lineTo(pos.x, pos.y);
+            if (wbTool === 'eraser') {
+                wbOffCtx.globalCompositeOperation = 'destination-out';
+                wbOffCtx.strokeStyle = 'rgba(0,0,0,1)';
+                wbOffCtx.lineWidth = parseInt(wbSize.value) * 3;
+            } else {
+                wbOffCtx.globalCompositeOperation = 'source-over';
+                wbOffCtx.strokeStyle = wbColor.value;
+                wbOffCtx.lineWidth = parseInt(wbSize.value);
+            }
+            wbOffCtx.stroke();
+            wbLastX = pos.x;
+            wbLastY = pos.y;
+            redrawCanvas();
+        }
+
+        function wbEnd(e) {
+            if (wbDrawing) {
+                wbDrawing = false;
+                wbOffCtx.globalCompositeOperation = 'source-over';
+            }
+        }
+
+        function wbCommitText() {
+            const text = wbTextInput.value.trim();
+            if (!text) {
+                hideWbTextInput();
+                return;
+            }
+            const rect = wbCanvas.getBoundingClientRect();
+            const screenX = parseFloat(wbTextInput.style.left) || 0;
+            const screenY = parseFloat(wbTextInput.style.top) || 0;
+            const x = screenX / wbZoom;
+            const y = screenY / wbZoom;
+            const fontSize = parseInt(wbSize.value) * 4 + 12;
+            wbOffCtx.font = `${fontSize}px 'Google Sans', sans-serif`;
+            wbOffCtx.fillStyle = wbColor.value;
+            wbOffCtx.globalCompositeOperation = 'source-over';
+            wbOffCtx.textBaseline = 'top';
+            wbOffCtx.fillText(text, x, y);
+            hideWbTextInput();
+            redrawCanvas();
+        }
+
+        // Event listeners for whiteboard
+        if (wbCanvas) {
+            wbCanvas.addEventListener('mousedown', wbStart);
+            wbCanvas.addEventListener('mousemove', wbMove);
+            wbCanvas.addEventListener('mouseup', wbEnd);
+            wbCanvas.addEventListener('mouseleave', wbEnd);
+            wbCanvas.addEventListener('touchstart', wbStart, { passive: false });
+            wbCanvas.addEventListener('touchmove', wbMove, { passive: false });
+            wbCanvas.addEventListener('touchend', wbEnd);
+        }
+        if (wbNoneBtn) wbNoneBtn.addEventListener('click', () => setWbTool('none'));
+        if (wbPenBtn) wbPenBtn.addEventListener('click', () => setWbTool('pen'));
+        if (wbTextBtn) wbTextBtn.addEventListener('click', () => setWbTool('text'));
+        if (wbEraserBtn) wbEraserBtn.addEventListener('click', () => setWbTool('eraser'));
+        if (wbClearBtn) wbClearBtn.addEventListener('click', () => {
+            if (confirm('Clear the entire whiteboard?')) {
+                wbOffCtx.clearRect(0, 0, wbOffscreen.width, wbOffscreen.height);
+                redrawCanvas();
+            }
+        });
+        if (wbToggleTheme) wbToggleTheme.addEventListener('click', () => {
+            wbIsDark = !wbIsDark;
+            applyWbTheme();
+            localStorage.setItem('g_wb_dark', wbIsDark ? 'true' : 'false');
+        });
+        if (wbCloseBtn) wbCloseBtn.addEventListener('click', closeWhiteboard);
+        if (wbTextInput) {
+            wbTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    wbCommitText();
+                } else if (e.key === 'Escape') {
+                    hideWbTextInput();
+                }
+            });
+            wbTextInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (wbTextInput.classList.contains('active')) {
+                        wbCommitText();
+                    }
+                }, 150);
+            });
+        }
+
+        // Zoom
+        if (wbZoomIn) wbZoomIn.addEventListener('click', () => {
+            wbZoom = Math.min(3.0, wbZoom + 0.1);
+            redrawCanvas();
+            localStorage.setItem('g_wb_zoom', String(wbZoom));
+        });
+        if (wbZoomOut) wbZoomOut.addEventListener('click', () => {
+            wbZoom = Math.max(0.3, wbZoom - 0.1);
+            redrawCanvas();
+            localStorage.setItem('g_wb_zoom', String(wbZoom));
+        });
+
+        window.addEventListener('resize', () => {
+            if (whiteboardPanel.classList.contains('open')) {
+                if (wbResizeTimeout) clearTimeout(wbResizeTimeout);
+                wbResizeTimeout = setTimeout(resizeWbCanvas, 100);
+            }
+        });
+
+        // ---------- Special commands & panel openers ----------
+        const panelCommands = {
+            clock: () => { openPanel(clockPanel); startClock(); },
+            todo: () => { openPanel(todoPanel); renderTodos(); },
+            timer: () => { openPanel(timerPanel); },
+            stopwatch: () => { openPanel(stopwatchPanel); },
+            notes: () => { openPanel(notesPanel); loadNotes(); },
+            terminal: () => { openPanel(terminalPanel); focusTerminal(); },
+            github: () => { openPanel(githubPanel); loadGithub(); },
+            day: () => { openPanel(dayPanel); },
+            calc: () => { openPanel(calcPanel); resetCalc(); },
+            color: () => { openPanel(colorPanel); initColorPicker(); },
+            weather: () => { openPanel(weatherPanel); loadWeather(); },
+            whiteboard: () => { openWhiteboard(); }
+        };
+
+        function focusTerminal() {
+            setTimeout(() => terminalInput.focus(), 100);
+        }
+
+        function doSearch() {
+            const input = promptInput.value.trim();
+            if (!input) return;
+            
+            const parts = input.split(' ');
+            const first = parts[0].toLowerCase();
+            
+            if (panelCommands[first]) {
+                promptInput.value = '';
+                panelCommands[first]();
+                return;
+            }
+            
+            if (parts[0] === '/add' && parts.length >= 3) {
+                const key = parts[1];
+                const url = parts.slice(2).join(' ');
+                if (key && url) { state.links[key] = url; saveLinks(); showNotifier(`Added "${key}"`); promptInput.value = ''; return; }
+            }
+            if (parts[0] === '/remove' && parts.length === 2) {
+                const key = parts[1];
+                if (state.links[key]) { delete state.links[key]; saveLinks(); showNotifier(`Removed "${key}"`); promptInput.value = ''; return; }
+                else { showNotifier(`"${key}" not found`, 'error'); promptInput.value = ''; return; }
+            }
+            if (parts[0] === '/view') {
+                const keys = Object.keys(state.links);
+                if (keys.length === 0) { showNotifier('No quicklinks saved.', 'error'); promptInput.value = ''; return; }
+                let content = '<div style="margin-bottom:12px;color:var(--sec);font-size:0.9rem;">Click edit to edit, delete to delete</div>';
+                keys.forEach(key => {
+                    content += `
+                        <div class="link-item">
+                            <div class="link-info">
+                                <span class="link-key">${key}</span>
+                                <span class="link-url">${state.links[key]}</span>
+                            </div>
+                            <div class="link-actions">
+                                <button class="edit-link" data-key="${key}" data-url="${state.links[key]}">
+                                    <span class="material-symbols-outlined">edit</span>
+                                </button>
+                                <button class="del" data-key="${key}">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                view(true, 'Quicklinks', content);
+                setTimeout(() => {
+                    document.querySelectorAll('.edit-link').forEach(btn => {
+                        btn.addEventListener('click', function handler() {
+                            const key = this.dataset.key;
+                            const url = this.dataset.url;
+                            const newUrl = prompt(`Edit URL for "${key}":`, url);
+                            if (newUrl !== null && newUrl.trim()) {
+                                state.links[key] = newUrl.trim();
+                                saveLinks();
+                                showNotifier(`Updated "${key}"`);
+                                view(false);
+                                setTimeout(() => { doSearch(''); }, 0);
+                            }
+                        });
+                    });
+                    document.querySelectorAll('.del').forEach(btn => {
+                        btn.addEventListener('click', function delHandler() {
+                            const key = this.dataset.key;
+                            if (confirm(`Delete "${key}"?`)) {
+                                delete state.links[key];
+                                saveLinks();
+                                showNotifier(`Deleted "${key}"`);
+                                view(false);
+                            }
+                        });
+                    });
+                }, 0);
+                promptInput.value = '';
+                return;
+            }
+            
+            if (isAIMode) {
+                handleAIMode(input);
+            } else {
+                handleSearch(input);
+            }
+        }
+
+        // ---------- Shift key tracking ----------
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Shift') {
+                isAIMode = true;
+                promptBtn.classList.add('ai-mode');
+                promptInput.placeholder = 'Ask AI...';
+                promptBtn.querySelector('.material-symbols-outlined').textContent = 'arrow_upward';
+            }
+            if (e.key === 'Control' && !e.repeat) {
+                openPanel(clockPanel);
+                startClock();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift') {
+                isAIMode = false;
+                promptBtn.classList.remove('ai-mode');
+                promptInput.placeholder = 'Search or ask...';
+                promptBtn.querySelector('.material-symbols-outlined').textContent = 'search';
+            }
+        });
+
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); if (promptInput.value.trim()) handleAIMode(promptInput.value.trim()); }
+            else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }
+        });
+
+        // ---------- Clock ----------
+        let clockInterval = null;
+        function startClock() {
+            if (clockInterval) clearInterval(clockInterval);
+            function tick() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+                clockDisplay.textContent = `${h}:${m}:${s}`;
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                clockDate.textContent = now.toLocaleDateString(undefined, options);
+            }
+            tick();
+            clockInterval = setInterval(tick, 1000);
+        }
+
+        // ---------- Todo ----------
+        function saveTodos() { localStorage.setItem('g_todos', JSON.stringify(state.todos)); }
+        function renderTodos() {
+            if (!todoList) return;
+            if (state.todos.length === 0) {
+                todoList.innerHTML = '<div class="todo-empty">No todos yet. Add one above!</div>';
+                return;
+            }
+            todoList.innerHTML = state.todos.map((todo, i) => `
+                <div class="todo-item">
+                    <input type="checkbox" data-index="${i}" ${todo.done ? 'checked' : ''}>
+                    <span class="todo-text ${todo.done ? 'done' : ''}">${todo.text}</span>
+                    <button class="todo-del" data-index="${i}"><span class="material-symbols-outlined">close</span></button>
+                </div>
+            `).join('');
+            todoList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.index);
+                    state.todos[idx].done = e.target.checked;
+                    saveTodos();
+                    renderTodos();
+                });
+            });
+            todoList.querySelectorAll('.todo-del').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.closest('.todo-del').dataset.index);
+                    state.todos.splice(idx, 1);
+                    saveTodos();
+                    renderTodos();
+                });
+            });
+        }
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (!text) return;
+            state.todos.push({ text, done: false });
+            saveTodos();
+            todoInput.value = '';
+            renderTodos();
+        }
+        if (todoAddBtn) todoAddBtn.addEventListener('click', addTodo);
+        if (todoInput) todoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTodo(); });
+
+        // ---------- Timer ----------
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let timerRunning = false;
+        let timerTotal = 0;
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            timerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                timerToggle.textContent = 'Start';
+                return;
+            }
+            if (timerSeconds <= 0) return;
+            timerRunning = true;
+            timerToggle.textContent = 'Pause';
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerRunning = false;
+                    timerToggle.textContent = 'Start';
+                    showNotifier('Timer finished!', 'info');
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = ctx.createOscillator();
+                        osc.frequency.value = 800;
+                        osc.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.3);
+                    } catch(e) {}
+                }
+            }, 1000);
+        }
+
+        if (timerToggle) timerToggle.addEventListener('click', startTimer);
+        if (timerReset) timerReset.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerToggle.textContent = 'Start';
+            timerSeconds = timerTotal || 0;
+            updateTimerDisplay();
+        });
+        document.querySelectorAll('.timer-presets button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const secs = parseInt(btn.dataset.seconds);
+                clearInterval(timerInterval);
+                timerRunning = false;
+                timerToggle.textContent = 'Start';
+                timerSeconds = secs;
+                timerTotal = secs;
+                updateTimerDisplay();
+            });
+        });
+
+        // ---------- Stopwatch ----------
+        let stopwatchTime = 0;
+        let stopwatchInterval = null;
+        let stopwatchRunning = false;
+        let lapCounter = 0;
+
+        function updateStopwatchDisplay() {
+            const mins = Math.floor(stopwatchTime / 6000);
+            const secs = Math.floor((stopwatchTime % 6000) / 100);
+            const centis = stopwatchTime % 100;
+            stopwatchDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centis).padStart(2, '0')}`;
+        }
+
+        if (stopwatchToggle) stopwatchToggle.addEventListener('click', () => {
+            if (stopwatchRunning) {
+                clearInterval(stopwatchInterval);
+                stopwatchRunning = false;
+                stopwatchToggle.textContent = 'Start';
+            } else {
+                stopwatchRunning = true;
+                stopwatchToggle.textContent = 'Pause';
+                stopwatchInterval = setInterval(() => {
+                    stopwatchTime++;
+                    updateStopwatchDisplay();
+                }, 10);
+            }
+        });
+        if (stopwatchReset) stopwatchReset.addEventListener('click', () => {
+            clearInterval(stopwatchInterval);
+            stopwatchRunning = false;
+            stopwatchToggle.textContent = 'Start';
+            stopwatchTime = 0;
+            lapCounter = 0;
+            stopwatchLaps.innerHTML = '';
+            updateStopwatchDisplay();
+        });
+        if (stopwatchLap) stopwatchLap.addEventListener('click', () => {
+            if (stopwatchTime === 0) return;
+            lapCounter++;
+            const lap = document.createElement('div');
+            lap.className = 'stopwatch-lap';
+            const mins = Math.floor(stopwatchTime / 6000);
+            const secs = Math.floor((stopwatchTime % 6000) / 100);
+            const centis = stopwatchTime % 100;
+            lap.innerHTML = `<span class="lap-num">Lap ${lapCounter}</span><span class="lap-time">${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${String(centis).padStart(2,'0')}</span>`;
+            stopwatchLaps.appendChild(lap);
+        });
+
+        // ---------- Notes ----------
+        let notesTimeout = null;
+        function loadNotes() {
+            if (notesTextarea) notesTextarea.value = state.notes || '';
+        }
+        if (notesTextarea) {
+            notesTextarea.addEventListener('input', () => {
+                state.notes = notesTextarea.value;
+                notesStatus.textContent = 'Saving...';
+                if (notesTimeout) clearTimeout(notesTimeout);
+                notesTimeout = setTimeout(() => {
+                    localStorage.setItem('g_notes', state.notes);
+                    notesStatus.textContent = 'Saved';
+                }, 500);
+            });
+        }
+
+        // ---------- Terminal ----------
+        function termPrint(text, cls = 'out') {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${cls}`;
+            line.textContent = text;
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        function termInit() {
+            terminalOutput.innerHTML = '';
+            termPrint('Welcome to WebTerm v1.0', 'info');
+            termPrint('Type "help" for available commands.', 'info');
+            termPrint('', 'info');
+        }
+        function processCommand(cmd) {
+            const parts = cmd.trim().split(/\s+/);
+            const command = parts[0].toLowerCase();
+            switch (command) {
+                case 'help':
+                    termPrint('Available commands:', 'info');
+                    termPrint('  help          - Show this help', 'info');
+                    termPrint('  echo [text]   - Print text', 'info');
+                    termPrint('  date          - Show current date/time', 'info');
+                    termPrint('  clear         - Clear terminal', 'info');
+                    termPrint('  calc [expr]   - Calculate expression', 'info');
+                    termPrint('  open [url]    - Open URL in new tab', 'info');
+                    termPrint('  goto [url]    - Navigate to URL', 'info');
+                    termPrint('  ls            - List quicklinks', 'info');
+                    break;
+                case 'echo':
+                    termPrint(parts.slice(1).join(' ') || '');
+                    break;
+                case 'date':
+                    termPrint(new Date().toString());
+                    break;
+                case 'clear':
+                    terminalOutput.innerHTML = '';
+                    break;
+                case 'calc':
+                    try {
+                        const expr = parts.slice(1).join(' ');
+                        const result = Function('"use strict";return (' + expr + ')')();
+                        termPrint(`${expr} = ${result}`);
+                    } catch (e) {
+                        termPrint('Invalid expression', 'err');
+                    }
+                    break;
+                case 'open':
+                    const url = parts[1];
+                    if (url) {
+                        let full = url;
+                        if (!/^https?:\/\//i.test(full)) full = 'https://' + full;
+                        window.open(full, '_blank');
+                        termPrint(`Opened ${full}`, 'info');
+                    } else termPrint('Usage: open [url]', 'err');
+                    break;
+                case 'goto':
+                    const gurl = parts[1];
+                    if (gurl) {
+                        let full = gurl;
+                        if (!/^https?:\/\//i.test(full)) full = 'https://' + full;
+                        window.location.href = full;
+                    } else termPrint('Usage: goto [url]', 'err');
+                    break;
+                case 'ls':
+                    const keys = Object.keys(state.links);
+                    if (keys.length === 0) termPrint('No quicklinks.', 'info');
+                    else keys.forEach(k => termPrint(`  ${k} -> ${state.links[k]}`, 'info'));
+                    break;
+                case '':
+                    break;
+                default:
+                    termPrint(`Command not found: ${command}`, 'err');
+            }
+        }
+        if (terminalInput) {
+            terminalInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = terminalInput.value.trim();
+                    if (cmd) {
+                        termPrint(`$ ${cmd}`, 'cmd');
+                        processCommand(cmd);
+                    }
+                    terminalInput.value = '';
+                }
+            });
+        }
+        termInit();
+
+        // ---------- Global helpers ----------
+        function saveLinks() { localStorage.setItem('g_links', JSON.stringify(state.links)); }
+
+        openBtn.addEventListener('click', () => view(true));
+        closeBtn.addEventListener('click', () => view(false));
+        mask.addEventListener('click', () => view(false));
+
+        promptBtn.addEventListener('click', doSearch);
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            draw();
+            renderTodos();
+            updateTimerDisplay();
+            updateStopwatchDisplay();
+            loadNotes();
+        });
+
+        draw();
+    </script>
+</body>
+</html>
